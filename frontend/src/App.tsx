@@ -1,8 +1,12 @@
+import { Navbar, Footer } from "./components/layout/shared";
+
 function App() {
   return (
-    <main>
-      <h1 className="text-2xl">Schronisko</h1>
-    </main>
+    <>
+      <Navbar />
+      <main></main>
+      <Footer />
+    </>
   );
 }
 
