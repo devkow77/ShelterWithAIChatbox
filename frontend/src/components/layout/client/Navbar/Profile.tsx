@@ -16,7 +16,7 @@ interface User {
   avatar: string;
 }
 const Profile = () => {
-  const session: boolean = true;
+  const session: boolean = false;
 
   const user: User = {
     name: "Gość",
@@ -74,7 +74,7 @@ const Profile = () => {
             className="cursor-pointer font-medium"
             onClick={() => {}}
           >
-            Zaloguj się
+            <a href="/login">Zaloguj się</a>
           </DropdownMenuItem>
           <DropdownMenuItem
             className="cursor-pointer font-medium"
@@ -87,11 +87,8 @@ const Profile = () => {
             Nie masz konta?
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem
-            className="cursor-pointer font-medium"
-            onClick={() => {}}
-          >
-            Zarejestruj nowe konto
+          <DropdownMenuItem className="cursor-pointer font-medium">
+            <a href="/register">Zarejestruj nowe konto</a>
           </DropdownMenuItem>
         </DropdownMenuContent>
       )}

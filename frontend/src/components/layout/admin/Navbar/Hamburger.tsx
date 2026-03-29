@@ -27,7 +27,6 @@ const Hamburger = () => {
 
   const handleClick = (): void => {
     setIsOpen((prev) => !prev);
-    // Resetujemy stan podlisty przy zamykaniu całego menu
     if (isOpen) setIsAnimalsOpen(false);
   };
 
@@ -65,13 +64,13 @@ const Hamburger = () => {
       </motion.div>
 
       {isOpen ? (
-        <div className="fixed z-40 top-0 left-0 w-screen h-screen dark:bg-black dark:text-white bg-white flex items-center justify-center overflow-y-auto">
+        <div className="fixed top-0 left-0 z-40 flex h-screen w-screen items-center justify-center overflow-y-auto bg-white dark:bg-black dark:text-white">
           <ul className="space-y-6 text-center font-medium">
             <li>Strona główna</li>
             <li className="space-y-4">
               <button
                 onClick={toggleAnimals}
-                className="flex items-center justify-center w-full"
+                className="flex w-full items-center justify-center"
               >
                 Zarządzanie zwierzętami{" "}
                 {isAnimalsOpen ? <ChevronUp /> : <ChevronDown />}
