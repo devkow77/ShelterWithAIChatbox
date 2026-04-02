@@ -1,7 +1,7 @@
 import { createBrowserRouter, Outlet } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { Navbar, Footer } from "@/components/layout/shared";
-import { Home, Register, Login } from "@/pages";
+import { HomePage, RegisterPage, LoginPage, AnimalsPage } from "@/pages";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "./context/AuthContext";
@@ -25,7 +25,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Home />,
+        element: <HomePage />,
       },
     ],
   },
@@ -34,7 +34,7 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Register />,
+        element: <RegisterPage />,
       },
     ],
   },
@@ -43,7 +43,17 @@ const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <Login />,
+        element: <LoginPage />,
+      },
+    ],
+  },
+  {
+    path: "/zwierzeta",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <AnimalsPage />,
       },
     ],
   },

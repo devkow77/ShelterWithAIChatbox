@@ -1,7 +1,7 @@
-import prisma from '../src/prisma';
+import prisma from '../../src/prisma';
 import bcrypt from 'bcrypt';
 
-async function main() {
+const usersSeed = async () => {
   const hashedPassword = await bcrypt.hash('Haslo12345.', 10);
   console.log('Seed użytkowników...');
 
@@ -43,13 +43,6 @@ async function main() {
   });
 
   console.log('Seed użytkowników zakończony');
-}
+};
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+export default usersSeed;

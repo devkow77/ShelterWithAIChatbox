@@ -101,7 +101,7 @@ const faqFeatures: FaqFeature[] = [
   },
 ];
 
-function Home() {
+const HomePage = () => {
   return (
     <main>
       <Container className="space-y-12 md:space-y-16">
@@ -249,6 +249,6 @@ function Home() {
       </Container>
     </main>
   );
-}
+};
 
-export default Home;
+export default HomePage;

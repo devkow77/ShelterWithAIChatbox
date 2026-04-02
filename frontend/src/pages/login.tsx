@@ -26,7 +26,7 @@ interface LoginResponse {
   };
 }
 
-function Login() {
+const LoginPage = () => {
   const {
     register,
     handleSubmit,
@@ -110,6 +110,6 @@ function Login() {
       </Container>
     </main>
   );
-}
+};
 
-export default Login;
+export default LoginPage;

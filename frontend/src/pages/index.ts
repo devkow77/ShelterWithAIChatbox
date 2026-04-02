@@ -1,5 +1,6 @@
-import Home from "./home";
-import Register from "./register";
-import Login from "./login";
+import HomePage from "./home";
+import RegisterPage from "./register";
+import LoginPage from "./login";
+import AnimalsPage from "./animals";
 
-export { Home, Register, Login };
+export { HomePage, RegisterPage, LoginPage, AnimalsPage };

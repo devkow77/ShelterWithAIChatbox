@@ -31,7 +31,7 @@ export const registerSchema = z
 
 type RegisterFormData = z.infer<typeof registerSchema>;
 
-function Register() {
+const RegisterPage = () => {
   const {
     register,
     handleSubmit,
@@ -130,6 +130,6 @@ function Register() {
       </Container>
     </main>
   );
-}
+};
 
-export default Register;
+export default RegisterPage;

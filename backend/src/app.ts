@@ -1,5 +1,6 @@
 import express from 'express';
 import authRoutes from './routes/authRoutes';
+import animalRoutes from './routes/animalRoutes';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
@@ -20,5 +21,6 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/animals', animalRoutes);
 
 export default app;

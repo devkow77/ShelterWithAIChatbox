@@ -35,8 +35,8 @@ const animals: Animal[] = [
       "Poznaj urocze i delikatne króliki, które są idealnymi towarzyszami dla całej rodziny.",
   },
   {
-    title: "Inne",
-    href: "/zwierzeta/inne",
+    title: "Wszystkie",
+    href: "/zwierzeta",
     description:
       "Znajdź różnorodne zwierzęta, które czekają na kochający dom i nowe przygody.",
   },
@@ -62,7 +62,7 @@ const DesktopMenu = () => {
                     <NavigationMenuLink asChild key={index}>
                       <a
                         href={href}
-                        className="bg-transparent flex flex-col items-start"
+                        className="flex flex-col items-start bg-transparent"
                       >
                         <div>{title}</div>
                         <div className="text-muted-foreground">
