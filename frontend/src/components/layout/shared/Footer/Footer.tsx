@@ -78,6 +78,9 @@ const Footer = () => {
   return (
     <footer className="mt-8 text-sm md:mt-16 md:text-base">
       <Container>
+        <h2 className="mb-6 text-center text-2xl font-bold md:text-4xl lg:mb-8">
+          Tu nas znajdziesz
+        </h2>
         <GoogleMaps />
         <section className="my-12 flex flex-wrap items-center justify-between gap-4">
           <h3 className="font-medium">
