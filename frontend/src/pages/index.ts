@@ -3,5 +3,13 @@ import RegisterPage from "./register";
 import LoginPage from "./login";
 import AnimalsPage from "./animals";
 import FoundAnimalsPage from "./found-animals";
+import HowToHelp from "./how-to-help";
 
-export { HomePage, RegisterPage, LoginPage, AnimalsPage, FoundAnimalsPage };
+export {
+  HomePage,
+  RegisterPage,
+  LoginPage,
+  AnimalsPage,
+  FoundAnimalsPage,
+  HowToHelp,
+};

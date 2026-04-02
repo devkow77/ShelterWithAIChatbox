@@ -32,12 +32,12 @@ const FoundAnimalsPage = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
             {Array.from({ length: 12 }).map((_, index) => (
               <a href={"/"} key={index} className="space-y-2">
-                <div className="relative grid aspect-video place-items-center overflow-hidden rounded-xl bg-black/20">
+                <div className="relative grid aspect-video place-items-center overflow-hidden rounded-xl bg-black/10">
                   <span className="absolute top-3 right-3 rounded-2xl bg-red-200 px-2 py-2 text-xs font-semibold text-red-600">
                     ZNALEZIONY
                   </span>
                 </div>
-                <div>
+                <div className="space-y-1">
                   <h3 className="font-semibold lg:text-lg">
                     Znaleziono: 02.03.2026 r. w miejscowości Rzeszów, ul.
                     Krakowska 4

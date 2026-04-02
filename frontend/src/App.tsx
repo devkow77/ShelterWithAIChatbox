@@ -7,6 +7,7 @@ import {
   LoginPage,
   AnimalsPage,
   FoundAnimalsPage,
+  HowToHelp,
 } from "@/pages";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -70,6 +71,16 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <FoundAnimalsPage />,
+      },
+    ],
+  },
+  {
+    path: "/jak-pomoc",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <HowToHelp />,
       },
     ],
   },

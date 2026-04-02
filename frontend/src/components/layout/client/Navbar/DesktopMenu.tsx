@@ -82,7 +82,7 @@ const DesktopMenu = () => {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/pomoc">Jak pomóc?</a>
+            <a href="/jak-pomoc">Jak pomóc?</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>

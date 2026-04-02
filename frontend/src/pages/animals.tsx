@@ -234,7 +234,7 @@ const AnimalsPage = () => {
                   key={index}
                   className="space-y-2"
                 >
-                  <div className="relative grid aspect-video place-items-center overflow-hidden rounded-xl bg-black/20"></div>
+                  <div className="relative grid aspect-video place-items-center overflow-hidden rounded-xl bg-black/10"></div>
                   <div>
                     <h3 className="font-semibold lg:text-lg">
                       {animal.name} {animal.age} lat

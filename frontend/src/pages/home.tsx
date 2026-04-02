@@ -201,7 +201,7 @@ const HomePage = () => {
           </div>
           <div className="space-y-4 md:flex md:gap-6">
             <FaqList />
-            <div className="flex-1 space-y-4 border-black/10 md:border-l-2 md:pl-6">
+            <div className="flex-1 space-y-4 md:pl-6">
               {faqFeatures.map((reason, index) => (
                 <div className="flex items-center gap-x-4" key={index}>
                   <div
