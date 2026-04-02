@@ -39,7 +39,7 @@ const Profile = () => {
         </div>
         <Avatar className="h-10 w-10">
           <AvatarImage
-            src={user ? "/client-logged-avatar.png" : "/not-logged-avatar.png"}
+            src={user ? "/worker-logged-avatar.png" : "/not-logged-avatar.png"}
             alt={user?.fullName}
           />
           <AvatarFallback>{user?.fullName}</AvatarFallback>

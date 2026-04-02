@@ -9,31 +9,40 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import axios from "axios";
+import { useAuth } from "@/context/AuthContext";
 
-interface Admin {
-  name: string;
-  email: string;
-  avatar: string;
-}
 const Profile = () => {
-  const user: Admin = {
-    name: "Admin",
-    email: "Jesteś zalogowany jako admin.",
-    avatar: "/admin-logged-avatar.png",
+  const { user, loading, setUser } = useAuth();
+
+  if (loading) return null;
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("/api/auth/logout", {}, { withCredentials: true });
+      setUser(null);
+    } catch (err) {
+      console.error("Błąd podczas wylogowywania:", err);
+    }
   };
 
   const trigger = (
     <DropdownMenuTrigger asChild>
       <div className="flex cursor-pointer items-center gap-3 rounded-md px-3 py-2 transition">
         <div className="hidden flex-col text-right text-sm text-black md:flex dark:text-white">
-          <span className="leading-none font-medium">{user.name}</span>
+          <span className="leading-none font-medium">
+            {user?.fullName || "Gość"}
+          </span>
           <span className="text-xs text-black/70 dark:text-white/70">
-            {user.email}
+            {user?.email || "zaloguj się, aby mieć możliwość adopcji."}
           </span>
         </div>
         <Avatar className="h-10 w-10">
-          <AvatarImage src={user.avatar} alt={user.name} />
-          <AvatarFallback>UN</AvatarFallback>
+          <AvatarImage
+            src={user ? "/admin-logged-avatar.png" : "/not-logged-avatar.png"}
+            alt={user?.fullName}
+          />
+          <AvatarFallback>{user?.fullName}</AvatarFallback>
         </Avatar>
       </div>
     </DropdownMenuTrigger>
@@ -63,7 +72,7 @@ const Profile = () => {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           className="cursor-pointer font-semibold text-red-600"
-          onClick={() => {}}
+          onClick={handleLogout}
         >
           Wyloguj się
         </DropdownMenuItem>

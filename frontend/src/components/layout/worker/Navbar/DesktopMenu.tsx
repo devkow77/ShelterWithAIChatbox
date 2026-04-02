@@ -14,34 +14,34 @@ const DesktopMenu = () => {
       <NavigationMenuList className="space-x-2">
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/dashboard">Panel Admina</a>
+            <a href="/worker/dashboard">Panel Pracownika</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/users">Użytkownicy</a>
+            <a href="/worker/animals">Zwierzęta</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/animals">Zwierzęta</a>
+            <a href="/worker/adoptions">Wnioski adopcyjne</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/adoptions">Wnioski adopcyjne</a>
+            <a href="/worker/clients">Klienci</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/raports">
+            <a href="/worker/raports">
               Raporty <ChartNoAxesColumnIncreasing />
             </a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/email">Wiadomości</a>
+            <a href="/worker/messages">Wiadomości</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>

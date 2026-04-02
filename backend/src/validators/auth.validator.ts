@@ -29,3 +29,16 @@ export const registerSchema = z
     message: 'Hasła muszą być takie same.',
     path: ['confirmPassword'],
   });
+
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Niepoprawny adres email.'),
+  password: z
+    .string()
+    .min(8, 'Hasło musi mieć min. 8 znaków')
+    .regex(
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
+      'Hasło musi zawierać min. 1 wielką literę, 1 cyfrę i 1 znak specjalny.',
+    ),
+});
