@@ -77,7 +77,7 @@ const DesktopMenu = () => {
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/znalezione">Znalezione</a>
+            <a href="/znalezione-zwierzeta">Znalezione</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>

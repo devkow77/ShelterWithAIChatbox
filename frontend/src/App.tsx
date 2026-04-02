@@ -1,7 +1,13 @@
 import { createBrowserRouter, Outlet } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { Navbar, Footer } from "@/components/layout/shared";
-import { HomePage, RegisterPage, LoginPage, AnimalsPage } from "@/pages";
+import {
+  HomePage,
+  RegisterPage,
+  LoginPage,
+  AnimalsPage,
+  FoundAnimalsPage,
+} from "@/pages";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "./context/AuthContext";
@@ -54,6 +60,16 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <AnimalsPage />,
+      },
+    ],
+  },
+  {
+    path: "/znalezione-zwierzeta",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <FoundAnimalsPage />,
       },
     ],
   },
