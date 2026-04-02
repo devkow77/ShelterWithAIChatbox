@@ -1,3 +1,4 @@
-import FaqList from "./faqList";
+import ShortFaqList from "./shortFaqList";
+import FullFaqList from "./fullFaqList";
 
-export { FaqList };
+export { ShortFaqList, FullFaqList };

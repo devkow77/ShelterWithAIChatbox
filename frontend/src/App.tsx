@@ -8,6 +8,7 @@ import {
   AnimalsPage,
   FoundAnimalsPage,
   HowToHelp,
+  FaqPage,
 } from "@/pages";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -81,6 +82,16 @@ const router = createBrowserRouter([
       {
         index: true,
         element: <HowToHelp />,
+      },
+    ],
+  },
+  {
+    path: "/faq",
+    element: <Layout />,
+    children: [
+      {
+        index: true,
+        element: <FaqPage />,
       },
     ],
   },

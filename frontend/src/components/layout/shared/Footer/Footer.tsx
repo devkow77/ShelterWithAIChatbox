@@ -78,7 +78,7 @@ const Footer = () => {
   return (
     <footer className="mt-8 text-sm md:mt-16 md:text-base">
       <Container>
-        <h2 className="mb-6 text-center text-2xl font-bold md:text-4xl lg:mb-8">
+        <h2 className="mb-6 text-center text-2xl font-bold text-green-900 md:text-4xl lg:mb-8">
           Tu nas znajdziesz
         </h2>
         <GoogleMaps />
@@ -89,7 +89,9 @@ const Footer = () => {
           </h3>
           <form className="flex gap-4">
             <Input type="email" placeholder="Email" />
-            <Button type="submit">Subskrybuj</Button>
+            <Button type="submit" variant={"success"}>
+              Subskrybuj
+            </Button>
           </form>
         </section>
         <section className="border-t border-neutral-300 py-12 dark:border-neutral-700">

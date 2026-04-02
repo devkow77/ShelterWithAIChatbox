@@ -48,7 +48,7 @@ const DesktopMenu = () => {
       <NavigationMenuList className="space-x-2">
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/" className="font-semibold">
+            <a href="/" className="font-semibold text-green-900">
               Strona główna
             </a>
           </NavigationMenuLink>

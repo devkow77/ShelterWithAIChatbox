@@ -1,5 +1,5 @@
 import { Button, Container } from "@/components/ui";
-import { FaqList } from "@/components/shared";
+import { ShortFaqList } from "@/components/shared";
 
 interface Animal {
   name: string;
@@ -107,7 +107,9 @@ const HomePage = () => {
       <Container className="space-y-12 md:space-y-16">
         <section id="categories" className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold md:text-5xl">Schronisko</h1>
+            <h1 className="text-3xl font-bold text-green-900 md:text-5xl">
+              Schronisko
+            </h1>
             <p className="text-sm leading-6 md:text-base md:leading-7">
               Aktualnie posiadamy 300 zwierząt, które czekają na nowy dom!{" "}
               <br /> Nie bądź obojętny i stań się rodzicem jednego z naszych
@@ -132,7 +134,7 @@ const HomePage = () => {
               </a>
             ))}
             <a href="/zwierzeta">
-              <div className="grid aspect-square place-items-center rounded-full bg-black">
+              <div className="grid aspect-square place-items-center rounded-full bg-green-900">
                 <h2 className="z-2 text-xl font-semibold text-white lg:text-3xl">
                   Wszystkie
                 </h2>
@@ -142,7 +144,7 @@ const HomePage = () => {
         </section>
         <section id="adoptionsReasons" className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold md:text-4xl">
+            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
               Dlaczego warto adoptować?
             </h1>
             <p className="text-sm leading-6 md:text-base md:leading-7">
@@ -169,7 +171,7 @@ const HomePage = () => {
         </section>
         <section id="longestWaiting" className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold md:text-4xl">
+            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
               Najdłużej czekające
             </h1>
             <p className="text-sm leading-6 md:text-base md:leading-7">
@@ -195,12 +197,12 @@ const HomePage = () => {
         </section>
         <section id="faq" className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold md:text-4xl">
+            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
               Często zadawane pytania
             </h1>
           </div>
           <div className="space-y-4 md:flex md:gap-6">
-            <FaqList />
+            <ShortFaqList />
             <div className="flex-1 space-y-4 md:pl-6">
               {faqFeatures.map((reason, index) => (
                 <div className="flex items-center gap-x-4" key={index}>
@@ -223,7 +225,7 @@ const HomePage = () => {
           </Button>
         </section>
         <section id="blog" className="space-y-6 lg:space-y-8">
-          <h2 className="text-2xl font-bold md:text-4xl">
+          <h2 className="text-2xl font-bold text-green-900 md:text-4xl">
             Nasze ostatnie akcje
           </h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">

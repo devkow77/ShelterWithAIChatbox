@@ -58,7 +58,9 @@ const HowToHelp = () => {
       <Container className="space-y-12 md:space-y-16">
         <section className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
-            <h1 className="text-3xl font-bold md:text-5xl">Jak nam pomóc?</h1>
+            <h1 className="text-3xl font-bold text-green-900 md:text-5xl">
+              Jak nam pomóc?
+            </h1>
             <p className="text-sm leading-6 md:text-base md:leading-7">
               Cieszę się, że chcesz pomóc! Oto kilka sposobów, w jakie możesz
               wesprzeć nasze schronisko.
@@ -82,7 +84,7 @@ const HowToHelp = () => {
           </div>
         </section>
         <section className="space-y-6 lg:space-y-8">
-          <h1 className="text-2xl font-bold md:text-4xl">
+          <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
             Jak zostać wolontariuszem?
           </h1>
           <ol className="w-fit list-inside list-decimal space-y-2 bg-red-100 p-4 text-sm leading-6 md:text-base md:leading-7">
@@ -102,7 +104,7 @@ const HowToHelp = () => {
           </ol>
         </section>
         <section className="space-y-6 lg:space-y-8">
-          <h1 className="text-2xl font-bold md:text-4xl">
+          <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
             Na jakie konto wpłacać darowizny?
           </h1>
           <ol className="w-fit list-inside list-decimal space-y-2 bg-yellow-100 p-4 text-sm leading-6 md:text-base md:leading-7">
@@ -121,7 +123,7 @@ const HowToHelp = () => {
           </ol>
         </section>
         <section className="space-y-6 lg:space-y-8">
-          <h1 className="text-2xl font-bold md:text-4xl">
+          <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
             Co najbardziej potrzebujemy?
           </h1>
           <ol className="w-fit list-inside list-decimal space-y-2 bg-green-100 p-4 text-sm leading-6 md:text-base md:leading-7">
@@ -139,7 +141,7 @@ const HowToHelp = () => {
         </section>
         <section className="space-y-6 md:space-y-8">
           <div className="space-y-2 text-center">
-            <h1 className="text-2xl font-bold md:text-4xl">
+            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
               Zobacz nas w akcji!
             </h1>
           </div>

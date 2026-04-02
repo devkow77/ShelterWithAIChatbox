@@ -4,6 +4,7 @@ import LoginPage from "./login";
 import AnimalsPage from "./animals";
 import FoundAnimalsPage from "./found-animals";
 import HowToHelp from "./how-to-help";
+import FaqPage from "./faq";
 
 export {
   HomePage,
@@ -12,4 +13,5 @@ export {
   AnimalsPage,
   FoundAnimalsPage,
   HowToHelp,
+  FaqPage,
 };
