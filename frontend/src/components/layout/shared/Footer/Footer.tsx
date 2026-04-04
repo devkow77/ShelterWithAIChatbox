@@ -18,11 +18,11 @@ const links: Link[] = [
   },
   {
     name: "O nas",
-    href: "/about",
+    href: "/o-nas",
   },
   {
     name: "Zwierzęta",
-    href: "/animals",
+    href: "/zwierzeta",
   },
   {
     name: "Jak pomóc?",
@@ -38,7 +38,7 @@ const links: Link[] = [
   },
   {
     name: "Kontakt",
-    href: "/contact",
+    href: "/kontakt",
   },
 ];
 

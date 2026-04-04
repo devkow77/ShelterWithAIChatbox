@@ -5,6 +5,7 @@ import AnimalsPage from "./animals";
 import FoundAnimalsPage from "./found-animals";
 import HowToHelp from "./how-to-help";
 import FaqPage from "./faq";
+import ContactPage from "./contact";
 
 export {
   HomePage,
@@ -14,4 +15,5 @@ export {
   FoundAnimalsPage,
   HowToHelp,
   FaqPage,
+  ContactPage,
 };
