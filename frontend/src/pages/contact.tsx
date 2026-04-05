@@ -53,7 +53,7 @@ const ContactPage = () => {
   const onSubmit = async (data: ContactFormData) => {
     try {
       const res = await axios.post("/api/contact", data);
-      toast.info(res.data.msg);
+      toast.success(res.data.msg);
     } catch (err: any) {
       toast.info(err.response.data.msg);
     }

@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { sendContactMessage } from '../controllers/messageControllers';
+import { optionalAuthenticateUser } from '../middlewares/optionalAuth.middleware';
 
 const router = Router();
 
-router.post('/', sendContactMessage);
+router.post('/', optionalAuthenticateUser, sendContactMessage);
 
 export default router;

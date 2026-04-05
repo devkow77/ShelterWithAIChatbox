@@ -77,7 +77,7 @@ export const loginToAccount = async (req: Request, res: Response) => {
         .json({ msg: 'Niepoprawny email lub hasło!' });
     }
 
-    const token = generateToken({ userId: existingUser.id });
+    const token = generateToken({ userId: existingUser.id, userRole: existingUser.role });
 
     // Wyciągamy dane bez hasła
     const userResponse = {

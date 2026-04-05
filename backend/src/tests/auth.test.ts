@@ -1,4 +1,4 @@
-import request, { cookies } from 'supertest';
+import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import app from '../app';
 import prisma from '../prisma';

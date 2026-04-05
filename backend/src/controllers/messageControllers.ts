@@ -2,14 +2,23 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import nodemailer from 'nodemailer';
 import { contactSchema } from '../validators/message.validator';
+import { AuthRequest } from '../middlewares/auth.middleware';
 
-export const sendContactMessage = async (req: Request, res: Response) => {
+export const sendContactMessage = async (req: AuthRequest, res: Response) => {
   const parsedBody = contactSchema.safeParse(req.body);
 
   if (!parsedBody.success) {
     return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ msg: 'Nieprawidłowy format danych!' });
+  }
+
+  const userRole = req.userRole;
+
+  if (userRole == 'WORKER' || userRole == 'ADMIN') {
+    return res
+      .status(StatusCodes.FORBIDDEN)
+      .json({ msg: 'Tylko użytkownicy mogą wysyłać wiadomości!' });
   }
 
   const { fullName, email, message } = parsedBody.data;

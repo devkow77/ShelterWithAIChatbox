@@ -4,33 +4,29 @@ import { StatusCodes } from 'http-status-codes';
 
 export interface AuthRequest extends Request {
   userId?: number;
-  userRole?: "USER" | "WORKER" | "ADMIN";
+  userRole?: 'USER' | 'WORKER' | 'ADMIN';
 }
 
-export const authenticateUser = (
+export const optionalAuthenticateUser = (
   req: AuthRequest,
   res: Response,
   next: NextFunction,
 ) => {
   const token = req.cookies.token;
 
-  if (!token) {
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ msg: 'Brak tokenu, autoryzacja odmówiona!' });
-  }
+  if (!token) next();
 
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
       userId: number;
-      userRole: "USER" | "WORKER" | "ADMIN";
+      userRole: 'USER' | 'WORKER' | 'ADMIN';
     };
+
     req.userId = payload.userId;
     req.userRole = payload.userRole;
+
     next();
   } catch (err) {
-    return res
-      .status(StatusCodes.UNAUTHORIZED)
-      .json({ msg: 'Token jest nieprawidłowy lub wygasł!' });
+    next();
   }
 };

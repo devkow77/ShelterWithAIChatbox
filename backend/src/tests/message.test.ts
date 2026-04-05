@@ -1,0 +1,109 @@
+import request from 'supertest';
+import app from '../app';
+import { StatusCodes } from 'http-status-codes';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
+import usersSeed from '../../prisma/seed/usersSeed';
+
+// Mockowanie nodemailer - zapobiega wysyłaniu prawdziwych maili podczas testów
+vi.mock('nodemailer', () => ({
+  default: {
+    createTransport: vi.fn().mockReturnValue({
+      sendMail: vi.fn().mockResolvedValue({ messageId: 'test-id' }),
+    }),
+  },
+}));
+
+describe('POST /api/contact', () => {
+  beforeAll(async () => {
+    await usersSeed();
+  });
+
+  it('Powinno pozwolić niezalogowanemu użytkownikowi wysłać wiadomość', async () => {
+    const res = await request(app).post('/api/contact').send({
+      fullName: 'Niezalogowany',
+      email: 'niezalogowany@gmail.com',
+      message: 'Testowa wiadomość',
+    });
+
+    expect(res.status).toBe(StatusCodes.OK);
+    expect(res.body.msg).toBe('Wiadomość została wysłana pomyślnie!');
+  });
+
+  it('Powinno pozwolić użytkownikowi z rolą USER wysłać wiadomość', async () => {
+    // Logowanie jako USER
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: 'michal@gmail.com',
+      password: 'Haslo12345.',
+    });
+
+    expect(loginRes.status).toBe(StatusCodes.OK);
+
+    // Pobieramy token z ciasteczek ustawionych przez serwer
+    const cookie = loginRes.get('Set-Cookie');
+
+    const res = await request(app)
+      .post('/api/contact')
+      .set('Cookie', cookie || []) // Przesyłamy ciasteczko z tokenem
+      .send({
+        fullName: 'Michał',
+        email: 'michal@gmail.com',
+        message: 'Testowa wiadomość od użytkownika',
+      });
+
+    expect(res.status).toBe(StatusCodes.OK);
+    expect(res.body.msg).toBe('Wiadomość została wysłana pomyślnie!');
+  });
+
+  it('Nie powinno pozwolić użytkownikowi z rolą WORKER wysłać wiadomość', async () => {
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: 'pracownik@gmail.com',
+      password: 'Haslo12345.',
+    });
+
+    const cookie = loginRes.get('Set-Cookie');
+
+    const res = await request(app)
+      .post('/api/contact')
+      .set('Cookie', cookie || [])
+      .send({
+        fullName: 'Pracownik Ola',
+        email: 'pracownik@gmail.com',
+        message: 'Testowa wiadomość od pracownika',
+      });
+
+    expect(res.status).toBe(StatusCodes.FORBIDDEN);
+    expect(res.body.msg).toBe('Tylko użytkownicy mogą wysyłać wiadomości!');
+  });
+
+  it('Nie powinno pozwolić użytkownikowi z rolą ADMIN wysłać wiadomość', async () => {
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: 'admin@gmail.com',
+      password: 'Haslo12345.',
+    });
+
+    const cookie = loginRes.get('Set-Cookie');
+
+    const res = await request(app)
+      .post('/api/contact')
+      .set('Cookie', cookie || [])
+      .send({
+        fullName: 'Admin',
+        email: 'admin@gmail.com',
+        message: 'Testowa wiadomość od admina',
+      });
+
+    expect(res.status).toBe(StatusCodes.FORBIDDEN);
+    expect(res.body.msg).toBe('Tylko użytkownicy mogą wysyłać wiadomości!');
+  });
+
+  it('Powinno zwrócić BAD_REQUEST dla nieprawidłowych danych', async () => {
+    const res = await request(app).post('/api/contact').send({
+      fullName: '',
+      email: 'invalid-email',
+      message: '',
+    });
+
+    expect(res.status).toBe(StatusCodes.BAD_REQUEST);
+    expect(res.body.msg).toBe('Nieprawidłowy format danych!');
+  });
+});
