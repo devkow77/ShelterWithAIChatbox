@@ -1,6 +1,6 @@
 import { createBrowserRouter, Outlet } from "react-router";
 import { RouterProvider } from "react-router/dom";
-import { Navbar, Footer } from "@/components/layout/shared";
+import { Navbar, Footer, NavbarOnlyLayout } from "@/components/layout/shared";
 import {
   HomePage,
   RegisterPage,
@@ -14,6 +14,7 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "./context/AuthContext";
+import { AccountPage } from "./pages/client";
 
 const queryClient = new QueryClient();
 
@@ -29,80 +30,48 @@ function Layout() {
 
 const router = createBrowserRouter([
   {
-    path: "/",
     element: <Layout />,
     children: [
       {
-        index: true,
+        path: "/",
         element: <HomePage />,
+      },
+      {
+        path: "/zwierzeta",
+        element: <AnimalsPage />,
+      },
+      {
+        path: "/znalezione-zwierzeta",
+        element: <FoundAnimalsPage />,
+      },
+      {
+        path: "/jak-pomoc",
+        element: <HowToHelp />,
+      },
+      {
+        path: "/faq",
+        element: <FaqPage />,
+      },
+      {
+        path: "/kontakt",
+        element: <ContactPage />,
       },
     ],
   },
   {
     path: "/register",
-    children: [
-      {
-        index: true,
-        element: <RegisterPage />,
-      },
-    ],
+    element: <RegisterPage />,
   },
   {
     path: "/login",
-    children: [
-      {
-        index: true,
-        element: <LoginPage />,
-      },
-    ],
+    element: <LoginPage />,
   },
   {
-    path: "/zwierzeta",
-    element: <Layout />,
+    element: <NavbarOnlyLayout />,
     children: [
       {
-        index: true,
-        element: <AnimalsPage />,
-      },
-    ],
-  },
-  {
-    path: "/znalezione-zwierzeta",
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        element: <FoundAnimalsPage />,
-      },
-    ],
-  },
-  {
-    path: "/jak-pomoc",
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        element: <HowToHelp />,
-      },
-    ],
-  },
-  {
-    path: "/faq",
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        element: <FaqPage />,
-      },
-    ],
-  },
-  {
-    path: "/kontakt",
-    element: <Layout />,
-    children: [
-      {
-        index: true,
-        element: <ContactPage />,
+        path: "/konto",
+        element: <AccountPage />,
       },
     ],
   },

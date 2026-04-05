@@ -59,12 +59,9 @@ const Profile = () => {
           <DropdownMenuLabel>Moje konto</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild className="cursor-pointer">
-            <a href="/profile" className="w-full">
-              Profil
+            <a href="/konto" className="w-full">
+              Konto
             </a>
-          </DropdownMenuItem>
-          <DropdownMenuItem className="cursor-pointer">
-            Ustawienia
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem

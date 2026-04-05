@@ -1,0 +1,211 @@
+import { Container } from "@/components/ui";
+import { useAuth } from "@/context/AuthContext";
+import { z } from "zod";
+import axios from "axios";
+import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button, Input, Label } from "@/components/ui";
+import { useNavigate } from "react-router";
+
+export const editPasswordSchema = z
+  .object({
+    currentPassword: z
+      .string()
+      .min(8, "Hasło musi mieć min. 8 znaków")
+      .regex(
+        /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
+        "Hasło musi zawierać min. 1 wielką literę, 1 cyfrę i 1 znak specjalny.",
+      ),
+    newPassword: z
+      .string()
+      .min(8, "Hasło musi mieć min. 8 znaków")
+      .regex(
+        /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
+        "Hasło musi zawierać min. 1 wielką literę, 1 cyfrę i 1 znak specjalny.",
+      ),
+    confirmNewPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmNewPassword, {
+    message: "Hasła muszą być takie same.",
+    path: ["confirmPassword"],
+  });
+
+type EditPasswordFormData = z.infer<typeof editPasswordSchema>;
+
+const AccountPage = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+
+  const {
+    handleSubmit,
+    register,
+    formState: { errors, isSubmitting },
+  } = useForm<EditPasswordFormData>({
+    resolver: zodResolver(editPasswordSchema),
+  });
+
+  const changeRoleDescription = (role: string) => {
+    switch (role) {
+      case "USER":
+        return "Klient";
+      case "WORKER":
+        return "Pracownik";
+      case "ADMIN":
+        return "Administrator";
+      default:
+        return "Nieznany";
+    }
+  };
+
+  const onSubmit = async (data: EditPasswordFormData) => {
+    try {
+      const res = await axios.post("/api/user/password", data);
+      toast.info(res.data.msg);
+    } catch (err: any) {
+      toast.info(err.response.data.msg);
+    }
+  };
+
+  if (!loading && !user?.role) {
+    toast.info("Musisz być zalogowany aby mieć dostęp do konta!");
+    navigate("/");
+    return;
+  }
+
+  return (
+    <main>
+      <Container className="mb-6 space-y-12 md:mb-10 md:space-y-16">
+        <section
+          id="info"
+          className="space-y-6 gap-x-12 text-center md:flex md:text-left"
+        >
+          <div className="relative mx-auto h-50 w-50 overflow-hidden rounded-full md:mx-0">
+            <img
+              src="./client-logged-avatar.png"
+              alt="profilowe klienta"
+              className="absolute top-0 left-0 size-full object-cover"
+              role="presentation"
+            />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-green-900 md:text-5xl">
+              Witaj {user?.fullName}!
+            </h1>
+            <p className="text-sm leading-6 font-medium md:text-base md:leading-7">
+              Poniżej znajdują się twoje podstawowe dane z konta.
+            </p>
+            <ul className="space-y-2 text-sm leading-6 md:text-base md:leading-7">
+              <li>Imię i nazwisko: {user?.fullName}</li>
+              <li>Email: {user?.email}</li>
+              <li>Typ konta: {changeRoleDescription(user?.role as string)}</li>
+            </ul>
+          </div>
+        </section>
+        <section id="adoptions" className="space-y-6 lg:space-y-8">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
+              Twoje aktualne adopcje
+            </h1>
+            <p className="text-sm leading-6 md:text-base md:leading-7">
+              Poniżej znajduje się lista twoich dotychczasowych adopcji jak
+              również obecne zgłoszenia w naszym schronisku.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+            <a href="/" className="space-y-2">
+              <div className="relative grid aspect-video place-items-center overflow-hidden rounded-xl bg-black/10">
+                <span className="absolute top-3 right-3 rounded-2xl bg-yellow-200 px-2 py-2 text-xs font-semibold text-yellow-600">
+                  OCZEKUJE NA AKCEPTACJE
+                </span>
+              </div>
+              <div>
+                <h3 className="font-semibold lg:text-lg">Brutus</h3>
+                <p className="line-clamp-4 text-xs leading-5 lg:text-sm lg:leading-6">
+                  Spokojny pies który uwielbia się bawić...
+                </p>
+              </div>
+            </a>
+            {Array.from({ length: 2 }).map((_, index: number) => (
+              <a href="/" key={index} className="space-y-2">
+                <div className="relative grid aspect-video place-items-center overflow-hidden rounded-xl bg-black/10"></div>
+                <div>
+                  <h3 className="font-semibold lg:text-lg">Felix</h3>
+                  <p className="line-clamp-4 text-xs leading-5 lg:text-sm lg:leading-6">
+                    Adoptowano 15.02.2025 r.
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+        <section id="editPassword" className="space-y-6 lg:space-y-8">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
+              Chcesz zmienić hasło?
+            </h1>
+            <p className="text-sm leading-6 md:text-base md:leading-7">
+              Poniżej znajduje się formularz do zmiany dotychczasowego hasła.
+            </p>
+          </div>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Label>Aktualne hasło</Label>
+            <Input
+              {...register("currentPassword")}
+              className="mt-2 mb-4"
+              placeholder="Podaj swoje aktualne hasło..."
+              autoFocus
+            />
+            {errors.currentPassword && (
+              <p className="-mt-2 mb-4 text-xs font-medium text-red-600 lg:text-sm">
+                {errors.currentPassword.message}
+              </p>
+            )}
+            <Label>Nowe hasło</Label>
+            <Input
+              {...register("newPassword")}
+              className="mt-2 mb-4"
+              placeholder="Podaj nowe hasło..."
+            />
+            {errors.newPassword && (
+              <p className="-mt-2 mb-4 text-xs font-medium text-red-600 lg:text-sm">
+                {errors.newPassword.message}
+              </p>
+            )}
+
+            <Label>Powtórz nowe hasło</Label>
+            <Input
+              {...register("confirmNewPassword")}
+              type="password"
+              className="mt-2 mb-4"
+              placeholder="Powtórz nowe hasło..."
+            />
+            {errors.confirmNewPassword && (
+              <p className="-mt-2 mb-4 text-xs font-medium text-red-600 lg:text-sm">
+                {errors.confirmNewPassword.message}
+              </p>
+            )}
+
+            <Button type="submit" className="cursor-pointer bg-green-600">
+              {isSubmitting ? "Aktualizacja..." : "Ustaw nowe hasło"}
+            </Button>
+          </form>
+        </section>
+        <section id="2fa" className="space-y-6 lg:space-y-8">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
+              Włącz weryfikację dwuetapową 2FA
+            </h1>
+            <p className="text-sm leading-6 md:text-base md:leading-7">
+              Kliknij przycisk poniżej aby przejść do konfiguracji weryfikacji
+              dwuetapowej.
+            </p>
+          </div>
+          <Button variant={"success"}>Włącz weryfikację dwuetapową</Button>
+        </section>
+      </Container>
+    </main>
+  );
+};
+
+export default AccountPage;
