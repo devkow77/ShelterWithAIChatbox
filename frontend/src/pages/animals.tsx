@@ -15,6 +15,7 @@ import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import axios from "axios";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Heart } from "lucide-react";
 
 interface Animal {
   slug: string;
@@ -236,7 +237,11 @@ const AnimalsPage = () => {
                   key={index}
                   className="space-y-2"
                 >
-                  <div className="relative grid aspect-video place-items-center overflow-hidden rounded-xl bg-black/10"></div>
+                  <div className="relative grid aspect-video place-items-center overflow-hidden rounded-xl bg-black/10">
+                    <span className="absolute top-3 right-3 rounded-full bg-white p-1 sm:p-2">
+                      <Heart className="scale-80 text-red-600 sm:scale-100" />
+                    </span>
+                  </div>
                   <div>
                     <h3 className="font-semibold lg:text-lg">
                       {animal.name} {animal.age} lat

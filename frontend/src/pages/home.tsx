@@ -1,5 +1,6 @@
 import { Button, Container } from "@/components/ui";
 import { ShortFaqList } from "@/components/shared";
+import { Heart } from "lucide-react";
 
 interface Animal {
   name: string;
@@ -183,7 +184,11 @@ const HomePage = () => {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:gap-6">
             {Array.from({ length: 8 }).map((_, index: number) => (
               <a href="/" key={index} className="space-y-2">
-                <div className="relative grid aspect-square place-items-center overflow-hidden rounded-xl bg-black/20"></div>
+                <div className="relative grid aspect-square place-items-center overflow-hidden rounded-xl bg-black/20">
+                  <span className="absolute top-3 right-3 rounded-full bg-white p-1 sm:p-2">
+                    <Heart className="scale-80 text-red-600 sm:scale-100" />
+                  </span>
+                </div>
                 <div>
                   <h3 className="text-sm font-semibold lg:text-lg">Felix</h3>
                   <p className="text-xs lg:text-sm">Z nami od 03.04.2023 r.</p>
