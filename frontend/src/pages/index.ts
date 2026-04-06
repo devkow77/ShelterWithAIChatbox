@@ -8,6 +8,7 @@ import FaqPage from "./faq";
 import ContactPage from "./contact";
 import TermsPage from "./terms";
 import PrivacyPage from "./privacy";
+import BlogPage from "./blog";
 
 export {
   HomePage,
@@ -20,4 +21,5 @@ export {
   ContactPage,
   TermsPage,
   PrivacyPage,
+  BlogPage,
 };
