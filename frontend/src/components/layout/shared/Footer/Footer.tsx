@@ -62,12 +62,12 @@ const socials: Link[] = [
 
 const informations: Link[] = [
   {
-    name: "Regulami serwisu",
-    href: "/",
+    name: "Regulamin serwisu",
+    href: "/regulamin",
   },
   {
     name: "Polityka prywatności",
-    href: "/",
+    href: "/polityka-prywatnosci",
   },
   {
     name: "Wszelkie prawa zastrzeżone",

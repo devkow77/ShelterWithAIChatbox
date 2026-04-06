@@ -10,6 +10,8 @@ import {
   HowToHelp,
   FaqPage,
   ContactPage,
+  TermsPage,
+  PrivacyPage,
 } from "@/pages";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -55,6 +57,14 @@ const router = createBrowserRouter([
       {
         path: "/kontakt",
         element: <ContactPage />,
+      },
+      {
+        path: "/regulamin",
+        element: <TermsPage />,
+      },
+      {
+        path: "/polityka-prywatnosci",
+        element: <PrivacyPage />,
       },
     ],
   },
