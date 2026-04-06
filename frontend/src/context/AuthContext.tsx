@@ -11,6 +11,7 @@ type AuthContextType = {
   user: User | null;
   setUser: (user: User | null) => void;
   loading: boolean;
+  logout: () => Promise<void>;
 };
 
 export const AuthContext = createContext<AuthContextType | null>(null);
@@ -37,8 +38,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     handleCheckAuth();
   }, []);
 
+  const logout = async () => {
+    try {
+      await axios.post("/api/auth/logout", {}, { withCredentials: true });
+    } catch (err) {
+      console.log("Błąd wylogowania: ", err);
+    } finally {
+      setUser(null);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, setUser, loading }}>
+    <AuthContext.Provider value={{ user, setUser, loading, logout }}>
       {children}
     </AuthContext.Provider>
   );

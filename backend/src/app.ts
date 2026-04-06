@@ -2,6 +2,7 @@ import express from 'express';
 import authRoutes from './routes/authRoutes';
 import animalRoutes from './routes/animalRoutes';
 import messageRoutes from './routes/messageRoutes';
+import userRoutes from './routes/userRoutes';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 
@@ -24,5 +25,6 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/animals', animalRoutes);
 app.use('/api/contact', messageRoutes);
+app.use('/api/user', userRoutes);
 
 export default app;

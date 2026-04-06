@@ -7,8 +7,9 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, Label } from "@/components/ui";
 import { useNavigate } from "react-router";
+import { useEffect } from "react";
 
-export const editPasswordSchema = z
+export const updatePasswordSchema = z
   .object({
     currentPassword: z
       .string()
@@ -28,21 +29,21 @@ export const editPasswordSchema = z
   })
   .refine((data) => data.newPassword === data.confirmNewPassword, {
     message: "Hasła muszą być takie same.",
-    path: ["confirmPassword"],
+    path: ["confirmNewPassword"],
   });
 
-type EditPasswordFormData = z.infer<typeof editPasswordSchema>;
+type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
 
 const AccountPage = () => {
-  const { user, loading } = useAuth();
+  const { user, loading, logout } = useAuth();
   const navigate = useNavigate();
 
   const {
     handleSubmit,
     register,
-    formState: { errors, isSubmitting },
-  } = useForm<EditPasswordFormData>({
-    resolver: zodResolver(editPasswordSchema),
+    formState: { errors, isSubmitting, isDirty },
+  } = useForm<UpdatePasswordFormData>({
+    resolver: zodResolver(updatePasswordSchema),
   });
 
   const changeRoleDescription = (role: string) => {
@@ -58,20 +59,25 @@ const AccountPage = () => {
     }
   };
 
-  const onSubmit = async (data: EditPasswordFormData) => {
+  const onSubmit = async (data: UpdatePasswordFormData) => {
     try {
-      const res = await axios.post("/api/user/password", data);
-      toast.info(res.data.msg);
+      const res = await axios.patch("/api/user/password", data, {
+        withCredentials: true,
+      });
+      toast.success(res.data.msg);
+      await logout();
+      navigate("/login");
     } catch (err: any) {
-      toast.info(err.response.data.msg);
+      toast.error(err.response.data.msg);
     }
   };
 
-  if (!loading && !user?.role) {
-    toast.info("Musisz być zalogowany aby mieć dostęp do konta!");
-    navigate("/");
-    return;
-  }
+  useEffect(() => {
+    if (!loading && !user?.role) {
+      toast.info("Musisz być zalogowany aby mieć dostęp do konta!");
+      navigate("/");
+    }
+  }, [loading, user, navigate]);
 
   return (
     <main>
@@ -155,6 +161,7 @@ const AccountPage = () => {
               className="mt-2 mb-4"
               placeholder="Podaj swoje aktualne hasło..."
               autoFocus
+              type="password"
             />
             {errors.currentPassword && (
               <p className="-mt-2 mb-4 text-xs font-medium text-red-600 lg:text-sm">
@@ -166,6 +173,7 @@ const AccountPage = () => {
               {...register("newPassword")}
               className="mt-2 mb-4"
               placeholder="Podaj nowe hasło..."
+              type="password"
             />
             {errors.newPassword && (
               <p className="-mt-2 mb-4 text-xs font-medium text-red-600 lg:text-sm">
@@ -176,9 +184,9 @@ const AccountPage = () => {
             <Label>Powtórz nowe hasło</Label>
             <Input
               {...register("confirmNewPassword")}
-              type="password"
               className="mt-2 mb-4"
               placeholder="Powtórz nowe hasło..."
+              type="password"
             />
             {errors.confirmNewPassword && (
               <p className="-mt-2 mb-4 text-xs font-medium text-red-600 lg:text-sm">
@@ -186,7 +194,11 @@ const AccountPage = () => {
               </p>
             )}
 
-            <Button type="submit" className="cursor-pointer bg-green-600">
+            <Button
+              type="submit"
+              className="cursor-pointer bg-green-600"
+              disabled={!isDirty || isSubmitting}
+            >
               {isSubmitting ? "Aktualizacja..." : "Ustaw nowe hasło"}
             </Button>
           </form>
