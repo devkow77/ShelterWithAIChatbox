@@ -1,16 +1,26 @@
 import prisma from '../../src/prisma';
+import { AnimalStatus } from '../../src/generated/prisma/enums';
 
 const animalsSeed = async () => {
-  console.log('Seed zwierząt...');
+  console.log('Seedowanie zwierząt...');
 
   // Usuń istniejące zwierzęta
   await prisma.animal.deleteMany();
 
-  const traitsList = ['energetic', 'calm', 'friendly', 'shy', 'affectionate'];
+  // Polskie cechy pasujące do formularza
+  const traitsList = [
+    'energiczny',
+    'spokojny',
+    'przyjazny',
+    'nieśmiały',
+    'pieszczoch',
+    'skory do zabawy',
+    'łagodny',
+  ];
 
   function getRandomTraits() {
-    const shuffled = traitsList.sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, Math.floor(Math.random() * traitsList.length) + 1);
+    const shuffled = [...traitsList].sort(() => 0.5 - Math.random());
+    return shuffled.slice(0, Math.floor(Math.random() * 3) + 1).join(', ');
   }
 
   function getRandomAge() {
@@ -18,7 +28,7 @@ const animalsSeed = async () => {
   }
 
   const animalNames = {
-    dog: [
+    pies: [
       'Felix',
       'Burek',
       'Reksio',
@@ -30,7 +40,7 @@ const animalsSeed = async () => {
       'Lassie',
       'Rex',
     ],
-    cat: [
+    kot: [
       'Mruczek',
       'Luna',
       'Kitty',
@@ -42,8 +52,7 @@ const animalsSeed = async () => {
       'Cleo',
       'Tiger',
     ],
-    rabbit: [
-      'Królik',
+    królik: [
       'Bunny',
       'Fluffy',
       'Puszek',
@@ -53,8 +62,9 @@ const animalsSeed = async () => {
       'Thumper',
       'Cinnabon',
       'Binky',
+      'Uszatek',
     ],
-    other: [
+    inny: [
       'Chomik',
       'Papuga',
       'Świnka',
@@ -70,71 +80,57 @@ const animalsSeed = async () => {
 
   const animals: any[] = [];
 
-  // Tworzymy 10 psów
-  animalNames.dog.forEach((name, idx) => {
-    animals.push({
-      slug: `dog-${idx + 1}`,
-      name,
-      type: 'dog',
-      gender: Math.random() > 0.5 ? 'male' : 'female',
-      size: ['small', 'medium', 'large'][Math.floor(Math.random() * 3)],
-      traits: getRandomTraits(),
-      age: getRandomAge(),
-      img: `animals/dog${idx + 1}.png`,
-      description: `Pies ${name} jest bardzo przyjazny i wesoły.`,
-    });
+  // Statusy zgodne z Twoim frontendem
+  const statusOptions: AnimalStatus[] = [
+    AnimalStatus.ADOPTOWANY,
+    AnimalStatus.SZUKA_DOMU,
+    AnimalStatus.W_TRAKCIE_ADOPCJI,
+    AnimalStatus.ZNALEZIONY,
+  ];
+
+  const getImageUrl = (path: string) =>
+    `${process.env.SUPABASE_STORAGE_URL}/storage/v1/object/public/animals/${path}`;
+
+  // Helper do tworzenia obiektów zwierząt
+  const createAnimalData = (name: string, type: string) => ({
+    name,
+    type,
+    gender: Math.random() > 0.5 ? 'samiec' : 'samica',
+    size: ['mały', 'średni', 'duży'][Math.floor(Math.random() * 3)],
+    status: statusOptions[Math.floor(Math.random() * statusOptions.length)],
+    traits: getRandomTraits(),
+    age: getRandomAge(),
+    description: `${name} szuka nowego, kochającego domu. Jest bardzo ${traitsList[Math.floor(Math.random() * traitsList.length)]}.`,
+    imageUrl: [
+      getImageUrl('kot1/img1.jpg'),
+      getImageUrl('kot1/img2.jpg'),
+      getImageUrl('kot1/img3.jpg'),
+      getImageUrl('kot1/img4.jpg'),
+    ],
   });
 
-  // Tworzymy 10 kotów
-  animalNames.cat.forEach((name, idx) => {
-    animals.push({
-      slug: `cat-${idx + 1}`,
-      name,
-      type: 'cat',
-      gender: Math.random() > 0.5 ? 'male' : 'female',
-      size: ['small', 'medium', 'large'][Math.floor(Math.random() * 3)],
-      traits: getRandomTraits(),
-      age: getRandomAge(),
-      img: `animals/cat${idx + 1}.png`,
-      description: `Kot ${name} jest bardzo przyjazny i uwielbia pieszczoty.`,
-    });
+  // Dodawanie zwierząt do tablicy
+  animalNames.pies.forEach((name) => {
+    animals.push(createAnimalData(name, 'pies'));
   });
 
-  // Tworzymy 10 królików
-  animalNames.rabbit.forEach((name, idx) => {
-    animals.push({
-      slug: `rabbit-${idx + 1}`,
-      name,
-      type: 'rabbit',
-      gender: Math.random() > 0.5 ? 'male' : 'female',
-      size: ['small', 'medium', 'large'][Math.floor(Math.random() * 3)],
-      traits: getRandomTraits(),
-      age: getRandomAge(),
-      img: `animals/rabbit${idx + 1}.png`,
-      description: `Królik ${name} jest spokojny i lubi spędzać czas w ogrodzie.`,
-    });
+  animalNames.kot.forEach((name) => {
+    animals.push(createAnimalData(name, 'kot'));
   });
 
-  // Tworzymy 10 innych zwierząt
-  animalNames.other.forEach((name, idx) => {
-    animals.push({
-      slug: `other-${idx + 1}`,
-      name,
-      type: 'other',
-      gender: Math.random() > 0.5 ? 'male' : 'female',
-      size: ['small', 'medium', 'large'][Math.floor(Math.random() * 3)],
-      traits: getRandomTraits(),
-      age: getRandomAge(),
-      img: `animals/other${idx + 1}.png`,
-      description: `${name} jest bardzo przyjazny i ciekawski.`,
-    });
+  animalNames.królik.forEach((name) => {
+    animals.push(createAnimalData(name, 'królik'));
+  });
+
+  animalNames.inny.forEach((name) => {
+    animals.push(createAnimalData(name, 'inny'));
   });
 
   await prisma.animal.createMany({
     data: animals,
   });
 
-  console.log('Seed zwierząt zakończony');
+  console.log(`Seedowanie zakończone. Dodano ${animals.length} zwierząt.`);
 };
 
 export default animalsSeed;

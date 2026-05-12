@@ -181,7 +181,7 @@ const HomePage = () => {
               możesz być tym, który odmieni ich życie.
             </p>
           </div>
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:gap-6">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 lg:gap-6">
             {Array.from({ length: 8 }).map((_, index: number) => (
               <a href="/" key={index} className="space-y-2">
                 <div className="relative grid aspect-square place-items-center overflow-hidden rounded-xl bg-black/20">

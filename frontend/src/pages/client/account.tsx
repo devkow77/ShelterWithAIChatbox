@@ -7,7 +7,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, Label } from "@/components/ui";
 import { useNavigate } from "react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useTotp } from "@/hooks/useTotp";
 
 export const updatePasswordSchema = z
   .object({
@@ -35,8 +36,12 @@ export const updatePasswordSchema = z
 type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
 
 const AccountPage = () => {
+  const { qrCode, manualKey, loading: totpLoading, error } = useTotp();
   const { user, loading, logout } = useAuth();
+  const [showTotpSetup, setShowTotpSetup] = useState<boolean>(false);
   const navigate = useNavigate();
+
+  const enabled2FA = false; // tymczasowe
 
   const {
     handleSubmit,
@@ -45,19 +50,6 @@ const AccountPage = () => {
   } = useForm<UpdatePasswordFormData>({
     resolver: zodResolver(updatePasswordSchema),
   });
-
-  const changeRoleDescription = (role: string) => {
-    switch (role) {
-      case "USER":
-        return "Klient";
-      case "WORKER":
-        return "Pracownik";
-      case "ADMIN":
-        return "Administrator";
-      default:
-        return "Nieznany";
-    }
-  };
 
   const onSubmit = async (data: UpdatePasswordFormData) => {
     try {
@@ -104,7 +96,7 @@ const AccountPage = () => {
             <ul className="space-y-2 text-sm leading-6 md:text-base md:leading-7">
               <li>Imię i nazwisko: {user?.fullName}</li>
               <li>Email: {user?.email}</li>
-              <li>Typ konta: {changeRoleDescription(user?.role as string)}</li>
+              <li>Typ konta: {user?.role}</li>
             </ul>
           </div>
         </section>
@@ -206,14 +198,50 @@ const AccountPage = () => {
         <section id="2fa" className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
-              Włącz weryfikację dwuetapową 2FA
+              {enabled2FA
+                ? "Zarządzaj weryfikacją dwuetapową 2FA"
+                : "Włącz weryfikację dwuetapową 2FA"}
             </h1>
             <p className="text-sm leading-6 md:text-base md:leading-7">
-              Kliknij przycisk poniżej aby przejść do konfiguracji weryfikacji
-              dwuetapowej.
+              {enabled2FA
+                ? "Kliknij przycisk poniżej aby wyłączyć weryfikację dwuetapową 2FA"
+                : "Kliknij przycisk poniżej aby włączyć weryfikację dwuetapową 2FA"}
             </p>
           </div>
-          <Button variant={"success"}>Włącz weryfikację dwuetapową</Button>
+          {!enabled2FA && showTotpSetup && (
+            <div className="space-y-2">
+              <p className="text-sm leading-6 md:text-base md:leading-7">
+                Zeskanuj poniższy kod QR w aplikacji Authenticator (np. Google
+                Authenticator lub Authy):
+              </p>
+              {qrCode && <img src={qrCode} alt="QR Code do TOTP" />}
+              <p className="text-sm leading-6 md:text-base md:leading-7">
+                Lub wpisz ręcznie klucz:
+              </p>
+              <div className="w-fit bg-black px-4 py-2 wrap-break-word text-white select-all">
+                {manualKey}
+              </div>
+              <p className="text-sm leading-6 md:text-base md:leading-7">
+                Po dodaniu konta w aplikacji Authenticator wprowadź wygenerowany
+                kod, aby zakończyć konfigurację 2FA.
+              </p>
+              <p className="text-sm leading-6 font-semibold md:text-base md:leading-7">
+                Weryfikacja 2FA
+              </p>
+            </div>
+          )}
+          <Button
+            variant={"success"}
+            onClick={
+              enabled2FA ? () => {} : () => setShowTotpSetup(!showTotpSetup)
+            }
+          >
+            {enabled2FA
+              ? "Wyłącz weryfikację 2FA"
+              : showTotpSetup
+                ? "Schowaj konfigurację 2FA"
+                : "Pokaż konfigurację 2FA"}
+          </Button>
         </section>
       </Container>
     </main>

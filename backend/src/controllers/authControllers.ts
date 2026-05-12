@@ -5,6 +5,8 @@ import { StatusCodes } from 'http-status-codes';
 import bcrypt from 'bcrypt';
 import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 
 // Rejestracja nowego konta użytkownika
 export const registerAccount = async (req: Request, res: Response) => {
@@ -77,7 +79,10 @@ export const loginToAccount = async (req: Request, res: Response) => {
         .json({ msg: 'Niepoprawny email lub hasło!' });
     }
 
-    const token = generateToken({ userId: existingUser.id, userRole: existingUser.role });
+    const token = generateToken({
+      userId: existingUser.id,
+      userRole: existingUser.role,
+    });
 
     // Wyciągamy dane bez hasła
     const userResponse = {
@@ -150,4 +155,62 @@ export const logout = (req: Request, res: Response) => {
     })
     .status(StatusCodes.NO_CONTENT)
     .json({ msg: 'Pomyślnie wylogowano' });
+};
+
+// generowanie QR dla 2FA
+export const generateTwoFactorQR = async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.userId },
+    });
+
+    if (!user) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
+        .json({ msg: 'Użytkownik nie istnieje' });
+    }
+
+    let secretBase32 = user.twoFactorSecret;
+    let otpauthUrl: string;
+
+    if (!secretBase32) {
+      const secret = speakeasy.generateSecret({
+        length: 20,
+        name: 'Schronisko',
+      });
+
+      if (!secret.otpauth_url) {
+        return res
+          .status(StatusCodes.INTERNAL_SERVER_ERROR)
+          .json({ msg: 'Nie udało się wygenerować URL' });
+      }
+
+      secretBase32 = secret.base32;
+      otpauthUrl = secret.otpauth_url;
+
+      await prisma.user.update({
+        where: { id: req.userId },
+        data: {
+          twoFactorSecret: secret.base32,
+        },
+      });
+    } else {
+      otpauthUrl = speakeasy.otpauthURL({
+        secret: secretBase32,
+        label: 'Schronisko',
+        issuer: 'Schronisko',
+        encoding: 'base32',
+      });
+    }
+    const qrCode = await QRCode.toDataURL(otpauthUrl);
+
+    return res.status(StatusCodes.OK).json({
+      qrCode,
+      manualKey: secretBase32,
+    });
+  } catch (err) {
+    return res
+      .status(StatusCodes.INTERNAL_SERVER_ERROR)
+      .json({ msg: 'Błąd serwera' });
+  }
 };

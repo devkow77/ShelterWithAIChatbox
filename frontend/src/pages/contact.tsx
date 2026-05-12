@@ -54,12 +54,13 @@ const ContactPage = () => {
     try {
       const res = await axios.post("/api/contact", data);
       toast.success(res.data.msg);
+      reset();
     } catch (err: any) {
       toast.info(err.response.data.msg);
     }
   };
 
-  const canSendMessage = !user || user.role === "USER";
+  const canSendMessage = !user || user.role === "UŻYTKOWNIK";
 
   return (
     <main>
@@ -135,8 +136,8 @@ const ContactPage = () => {
           ) : (
             <p className="max-w-4xl text-sm leading-5 md:text-base md:leading-6">
               Jesteś zalogowany jako{" "}
-              {user.role === "ADMIN" ? "administrator" : "pracownik"}. Aby
-              zarządzać wiadomościami, przejdź do panelu{" "}
+              {user.role === "ADMINISTRATOR" ? "administrator" : "pracownik"}.
+              Aby zarządzać wiadomościami, przejdź do panelu{" "}
               <a href="/wiadomosci" className="font-semibold">
                 wiadomości
               </a>

@@ -58,16 +58,7 @@ const Profile = () => {
         <DropdownMenuLabel>Moje konto</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild className="cursor-pointer">
-          <a href="/profile">Panel admina</a>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <a href="/">Zgłoszenia adopcji</a>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild className="cursor-pointer">
-          <a href="/">Dodaj wpis na blogu</a>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="cursor-pointer">
-          Ustawienia
+          <a href="/admin/konto">Panel admina</a>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

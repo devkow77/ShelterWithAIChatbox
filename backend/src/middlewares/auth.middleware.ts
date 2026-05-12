@@ -4,7 +4,7 @@ import { StatusCodes } from 'http-status-codes';
 
 export interface AuthRequest extends Request {
   userId?: number;
-  userRole?: "USER" | "WORKER" | "ADMIN";
+  userRole?: 'UŻYTKOWNIK' | 'PRACOWNIK' | 'ADMINISTRATOR';
 }
 
 export const authenticateUser = (
@@ -23,7 +23,7 @@ export const authenticateUser = (
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
       userId: number;
-      userRole: "USER" | "WORKER" | "ADMIN";
+      userRole: 'UŻYTKOWNIK' | 'PRACOWNIK' | 'ADMINISTRATOR';
     };
     req.userId = payload.userId;
     req.userRole = payload.userRole;

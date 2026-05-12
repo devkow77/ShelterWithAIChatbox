@@ -6,7 +6,6 @@ import {
   NavigationMenuLink,
   NavigationMenuList,
 } from "@/components/ui/navigation-menu";
-import { ChartNoAxesColumnIncreasing } from "lucide-react";
 
 const DesktopMenu = () => {
   return (
@@ -14,34 +13,34 @@ const DesktopMenu = () => {
       <NavigationMenuList className="space-x-2">
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/dashboard">Panel Admina</a>
+            <a href="/">Strona główna</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/users">Użytkownicy</a>
+            <a href="/znalezione-zwierzeta">Znalezione</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/animals">Zwierzęta</a>
+            <a href="/jak-pomoc">Jak pomóc?</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/adoptions">Wnioski adopcyjne</a>
+            <a href="/blog">Blog</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
         <NavigationMenuItem>
           <NavigationMenuLink asChild>
-            <a href="/admin/raports">
-              Raporty <ChartNoAxesColumnIncreasing />
+            <a href="/faq">Faq</a>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild>
+            <a href="/admin/konto" className="font-medium text-red-600">
+              Panel Admina
             </a>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild>
-            <a href="/admin/email">Wiadomości</a>
           </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>

@@ -1,4 +1,5 @@
 import { Container } from "@/components/ui";
+import { styleAnimalStatus } from "@/lib/utils";
 // import { useState } from "react";
 
 // interface Animal {
@@ -33,7 +34,9 @@ const FoundAnimalsPage = () => {
             {Array.from({ length: 12 }).map((_, index) => (
               <a href={"/"} key={index} className="space-y-2">
                 <div className="relative grid aspect-video place-items-center overflow-hidden rounded-xl bg-black/10">
-                  <span className="absolute top-3 right-3 rounded-2xl bg-red-200 px-2 py-2 text-xs font-semibold text-red-600">
+                  <span
+                    className={`${styleAnimalStatus("ZNALEZIONY")} absolute top-3 right-3 rounded-2xl p-2 text-xs font-semibold`}
+                  >
                     ZNALEZIONY
                   </span>
                 </div>

@@ -96,7 +96,7 @@ const Profile = () => {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="cursor-pointer font-medium">
-            <a href="/register" className="w-full">
+            <a href="/rejestracja" className="w-full">
               Zarejestruj nowe konto
             </a>
           </DropdownMenuItem>

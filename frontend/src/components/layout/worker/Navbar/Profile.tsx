@@ -59,7 +59,7 @@ const Profile = () => {
           <DropdownMenuLabel>Moje konto</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild className="cursor-pointer">
-            <a href="/profile" className="w-full">
+            <a href="/pracownik/konto" className="w-full">
               Profil
             </a>
           </DropdownMenuItem>
@@ -83,7 +83,7 @@ const Profile = () => {
             className="cursor-pointer font-medium"
             onClick={() => {}}
           >
-            <a href="/login" className="w-full">
+            <a href="/logowanie" className="w-full">
               Zaloguj się
             </a>
           </DropdownMenuItem>
@@ -99,7 +99,7 @@ const Profile = () => {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem className="cursor-pointer font-medium">
-            <a href="/register" className="w-full">
+            <a href="/rejestracja" className="w-full">
               Zarejestruj nowe konto
             </a>
           </DropdownMenuItem>

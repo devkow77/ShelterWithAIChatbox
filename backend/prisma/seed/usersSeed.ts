@@ -14,20 +14,20 @@ const usersSeed = async () => {
         fullName: 'Admin',
         email: 'admin@gmail.com',
         password: hashedPassword,
-        role: 'ADMIN',
+        role: 'ADMINISTRATOR',
       },
       {
         fullName: 'Pracownik Ola',
         email: 'pracownik@gmail.com',
 
         password: hashedPassword,
-        role: 'WORKER',
+        role: 'PRACOWNIK',
       },
       {
         fullName: 'Pracownik Jan',
         email: 'pracownik2@gmail.com',
         password: hashedPassword,
-        role: 'WORKER',
+        role: 'PRACOWNIK',
       },
       {
         fullName: 'Michał',

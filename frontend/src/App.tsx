@@ -18,6 +18,13 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "./context/AuthContext";
 import { AccountPage } from "./pages/client";
+import {
+  AdminAccountPage,
+  AdminAnimalsPage,
+  AdminWorkersPage,
+  EditAnimalPage,
+} from "./pages/admin";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
@@ -32,6 +39,7 @@ function Layout() {
 }
 
 const router = createBrowserRouter([
+  // SCIEZKI OGÓLNE //
   {
     element: <Layout />,
     children: [
@@ -74,19 +82,51 @@ const router = createBrowserRouter([
     ],
   },
   {
-    path: "/register",
+    path: "/rejestracja",
     element: <RegisterPage />,
   },
   {
     path: "/login",
     element: <LoginPage />,
   },
+  // SCIEZKI UŻYTKOWNIKA //
   {
-    element: <NavbarOnlyLayout />,
+    element: (
+      <ProtectedRoute requiredRole="UŻYTKOWNIK">
+        <NavbarOnlyLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "/konto",
         element: <AccountPage />,
+      },
+    ],
+  },
+  // SCIEZKI ADMINISTRATORA //
+  {
+    element: (
+      <ProtectedRoute requiredRole="ADMINISTRATOR">
+        <NavbarOnlyLayout />
+      </ProtectedRoute>
+    ),
+    path: "/admin",
+    children: [
+      {
+        path: "/admin/konto",
+        element: <AdminAccountPage />,
+      },
+      {
+        path: "/admin/zwierzeta",
+        element: <AdminAnimalsPage />,
+      },
+      {
+        path: "/admin/zwierzeta/:id/edycja",
+        element: <EditAnimalPage />,
+      },
+      {
+        path: "/admin/pracownicy",
+        element: <AdminWorkersPage />,
       },
     ],
   },

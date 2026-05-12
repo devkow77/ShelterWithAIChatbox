@@ -15,7 +15,7 @@ export const sendContactMessage = async (req: AuthRequest, res: Response) => {
 
   const userRole = req.userRole;
 
-  if (userRole == 'WORKER' || userRole == 'ADMIN') {
+  if (userRole == 'PRACOWNIK' || userRole == 'ADMINISTRATOR') {
     return res
       .status(StatusCodes.FORBIDDEN)
       .json({ msg: 'Tylko użytkownicy mogą wysyłać wiadomości!' });

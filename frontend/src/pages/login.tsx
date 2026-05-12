@@ -22,7 +22,7 @@ interface LoginResponse {
   user: {
     fullName: string;
     email: string;
-    role: "USER" | "WORKER" | "ADMIN";
+    role: "UŻYTKOWNIK" | "PRACOWNIK" | "ADMINISTRATOR";
   };
 }
 
@@ -100,7 +100,7 @@ const LoginPage = () => {
 
               <p className="text-sm lg:text-base">
                 Nie masz konta?{" "}
-                <a href="/register" className="font-semibold">
+                <a href="/rejestracja" className="font-semibold">
                   Zarejestruj się
                 </a>
               </p>

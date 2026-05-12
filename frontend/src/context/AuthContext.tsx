@@ -4,7 +4,7 @@ import axios from "axios";
 type User = {
   fullName: string;
   email: string;
-  role: "USER" | "WORKER" | "ADMIN";
+  role: "UŻYTKOWNIK" | "PRACOWNIK" | "ADMINISTRATOR";
 };
 
 type AuthContextType = {

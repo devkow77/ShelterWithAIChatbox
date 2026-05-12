@@ -8,15 +8,16 @@ datasource db {
 }
 
 enum ROLE {
-  USER
-  WORKER
-  ADMIN
+  UŻYTKOWNIK
+  PRACOWNIK
+  ADMINISTRATOR
 }
 
 enum AnimalStatus {
-  FOUND       // znaleziony - szukamy właściciela
-  AVAILABLE   // do adopcji
-  ADOPTED     // adoptowany
+  SZUKA_DOMU
+  ZNALEZIONY
+  W_TRAKCIE_ADOPCJI
+  ADOPTOWANY
 }
 
 model User {
@@ -24,28 +25,29 @@ model User {
   fullName  String
   email     String   @unique
   password  String
-  role      ROLE     @default(USER)
+  role      ROLE     @default(UŻYTKOWNIK)
+
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Animal {
   id          Int           @id @default(autoincrement())
-  slug        String        @unique
   name        String
   type        String
   gender      String
   size        String
-  traits      String[]
+  traits      String
   age         Int
-  img         String
   description String
 
-  status      AnimalStatus  @default(FOUND)
-  foundAt     DateTime?     // kiedy znaleziony
-  foundLocation String?     // gdzie znaleziony
-  availableFrom DateTime?   // od kiedy do adopcji
+  status      AnimalStatus  @default(ZNALEZIONY)
+  foundAt     DateTime?     
+  foundLocation String?     
+  availableFrom DateTime?   
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  imageUrl        String[]
 }

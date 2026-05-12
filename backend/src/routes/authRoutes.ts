@@ -4,6 +4,7 @@ import {
   loginToAccount,
   authInfo,
   logout,
+  generateTwoFactorQR,
 } from '../controllers/authControllers';
 import { authenticateUser } from '../middlewares/auth.middleware';
 
@@ -13,5 +14,6 @@ router.post('/register', registerAccount);
 router.post('/login', loginToAccount);
 router.get('/info', authenticateUser, authInfo);
 router.post('/logout', authenticateUser, logout);
+router.get('/2fa/setup', authenticateUser, generateTwoFactorQR);
 
 export default router;

@@ -1,10 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { StatusCodes } from 'http-status-codes';
 
 export interface AuthRequest extends Request {
   userId?: number;
-  userRole?: 'USER' | 'WORKER' | 'ADMIN';
+  userRole?: 'UŻYTKOWNIK' | 'PRACOWNIK' | 'ADMINISTRATOR';
 }
 
 export const optionalAuthenticateUser = (
@@ -19,7 +18,7 @@ export const optionalAuthenticateUser = (
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
       userId: number;
-      userRole: 'USER' | 'WORKER' | 'ADMIN';
+      userRole: 'UŻYTKOWNIK' | 'PRACOWNIK' | 'ADMINISTRATOR';
     };
 
     req.userId = payload.userId;

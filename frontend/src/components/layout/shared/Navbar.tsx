@@ -18,24 +18,24 @@ import { useAuth } from "@/context/AuthContext";
 
 export default function Navbar() {
   const { user } = useAuth();
-  const role = user?.role || "CLIENT";
+  const role = user?.role;
 
   const DesktopMenu =
-    role === "ADMIN"
+    role === "ADMINISTRATOR"
       ? AdminDesktopMenu
-      : role === "WORKER"
+      : role === "PRACOWNIK"
         ? WorkerDesktopMenu
         : ClientDesktopMenu;
   const Profile =
-    role === "ADMIN"
+    role === "ADMINISTRATOR"
       ? AdminProfile
-      : role === "WORKER"
+      : role === "PRACOWNIK"
         ? WorkerProfile
         : ClientProfile;
   const Hamburger =
-    role === "ADMIN"
+    role === "ADMINISTRATOR"
       ? AdminHamburger
-      : role === "WORKER"
+      : role === "PRACOWNIK"
         ? WorkerHamburger
         : ClientHamburger;
 
