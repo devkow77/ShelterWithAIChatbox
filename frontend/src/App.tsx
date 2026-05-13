@@ -121,7 +121,7 @@ const router = createBrowserRouter([
         element: <AdminAnimalsPage />,
       },
       {
-        path: "/admin/zwierzeta/:id/edycja",
+        path: "/admin/zwierzeta/:gatunek/:id/edycja",
         element: <EditAnimalPage />,
       },
       {

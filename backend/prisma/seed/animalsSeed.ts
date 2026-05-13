@@ -101,12 +101,7 @@ const animalsSeed = async () => {
     traits: getRandomTraits(),
     age: getRandomAge(),
     description: `${name} szuka nowego, kochającego domu. Jest bardzo ${traitsList[Math.floor(Math.random() * traitsList.length)]}.`,
-    imageUrl: [
-      getImageUrl('kot1/img1.jpg'),
-      getImageUrl('kot1/img2.jpg'),
-      getImageUrl('kot1/img3.jpg'),
-      getImageUrl('kot1/img4.jpg'),
-    ],
+    imageUrl: [],
   });
 
   // Dodawanie zwierząt do tablicy

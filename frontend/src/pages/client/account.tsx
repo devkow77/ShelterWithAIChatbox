@@ -36,7 +36,7 @@ export const updatePasswordSchema = z
 type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
 
 const AccountPage = () => {
-  const { qrCode, manualKey, loading: totpLoading, error } = useTotp();
+  const { qrCode, manualKey } = useTotp();
   const { user, loading, logout } = useAuth();
   const [showTotpSetup, setShowTotpSetup] = useState<boolean>(false);
   const navigate = useNavigate();

@@ -353,7 +353,9 @@ const AdminAnimalsPage = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
-                          <a href={`/admin/zwierzeta/${animal.id}/edycja`}>
+                          <a
+                            href={`/admin/zwierzeta/${animal.type}/${animal.id}/edycja`}
+                          >
                             Edytuj dane
                           </a>
                         </DropdownMenuItem>

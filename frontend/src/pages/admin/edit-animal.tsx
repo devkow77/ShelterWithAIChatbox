@@ -92,7 +92,6 @@ const GenericSelector = ({
 const EditAnimalPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const animalTypes = ["pies", "kot", "królik", "inny"];
   const animalSizes = ["mały", "średni", "duży"];
@@ -129,8 +128,18 @@ const EditAnimalPage = () => {
 
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const MAX_IMAGES = 5;
-  const imageUrl = watch("imageUrl") || [];
-  const canAddMore = imageUrl.length < MAX_IMAGES;
+
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [deletedImages, setDeletedImages] = useState<string[]>([]);
+
+  const existingImages = watch("imageUrl") || [];
+
+  const previewImages = [
+    ...existingImages,
+    ...pendingFiles.map((file) => URL.createObjectURL(file)),
+  ];
+
+  const canAddMore = previewImages.length < MAX_IMAGES;
 
   // Efekt do pobierania danych
   useEffect(() => {
@@ -163,88 +172,116 @@ const EditAnimalPage = () => {
     if (id) handleFetchAnimal();
   }, [id, reset]); // Dodano id i reset jako zależności
 
+  useEffect(() => {
+    const objectUrls = pendingFiles.map((file) => URL.createObjectURL(file));
+
+    return () => {
+      objectUrls.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, [pendingFiles]);
+
   const onSubmit = async (data: AnimalFormData) => {
     try {
-      await axios.patch(`/api/animals/${id}`, data, { withCredentials: true });
+      const uploadedUrls: string[] = [];
+
+      // upload nowych zdjęć
+      for (const file of pendingFiles) {
+        const fileName = `${Date.now()}-${file.name}`;
+        const filePath = `${data.type}/${id}/${fileName}`;
+
+        const { error } = await supabase.storage
+          .from("animals")
+          .upload(filePath, file);
+
+        if (error) throw error;
+
+        const { data: publicUrlData } = supabase.storage
+          .from("animals")
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(publicUrlData.publicUrl);
+      }
+
+      // usuń zaznaczone zdjęcia ze storage
+      if (deletedImages.length > 0) {
+        const paths = deletedImages.map((fileUrl) => {
+          const url = new URL(fileUrl);
+
+          return decodeURIComponent(
+            url.pathname.replace("/storage/v1/object/public/animals/", ""),
+          );
+        });
+
+        const { error } = await supabase.storage.from("animals").remove(paths);
+
+        if (error) throw error;
+      }
+
+      await axios.patch(
+        `/api/animals/${id}`,
+        {
+          ...data,
+          imageUrl: [...(data.imageUrl || []), ...uploadedUrls],
+        },
+        { withCredentials: true },
+      );
+
+      setPendingFiles([]);
+      setDeletedImages([]);
+
       toast.success("Dane zostały zaktualizowane!");
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+
       navigate("/admin/zwierzeta");
     } catch (err) {
+      console.error(err);
       toast.error("Wystąpił błąd podczas zapisywania.");
     }
   };
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    const current = watch("imageUrl") || [];
+    const selectedFiles = Array.from(files);
 
-    if (current.length >= MAX_IMAGES) {
+    const totalImages = existingImages.length + pendingFiles.length;
+
+    if (totalImages >= MAX_IMAGES) {
       toast.error("Możesz dodać maksymalnie 5 zdjęć.");
       return;
     }
 
-    const availableSlots = MAX_IMAGES - current.length;
-    const selectedFiles = Array.from(files).slice(0, availableSlots);
+    const availableSlots = MAX_IMAGES - totalImages;
+    const filesToAdd = selectedFiles.slice(0, availableSlots);
 
-    if (files.length > availableSlots) {
+    if (selectedFiles.length > availableSlots) {
       toast.error(`Możesz dodać jeszcze tylko ${availableSlots} zdjęć.`);
     }
 
-    const uploadedUrls: string[] = [];
-
-    for (const file of selectedFiles) {
-      const fileName = `${Date.now()}-${file.name}`;
-
-      const { error } = await supabase.storage
-        .from("animals")
-        .upload(fileName, file);
-
-      if (error) {
-        console.error("Supabase upload error:", error);
-        toast.error(error.message || "Błąd uploadu zdjęcia");
-        continue;
-      }
-
-      const { data } = supabase.storage.from("animals").getPublicUrl(fileName);
-
-      uploadedUrls.push(data.publicUrl);
-    }
-
-    setValue("imageUrl", [...current, ...uploadedUrls], {
-      shouldDirty: true,
-    });
+    setPendingFiles((prev) => [...prev, ...filesToAdd]);
   };
 
-  const handleRemoveImage = async (index: number) => {
-    if (isDeleting) return;
+  const handleRemoveImage = (index: number) => {
+    if (index < existingImages.length) {
+      const fileUrl = existingImages[index];
 
-    setIsDeleting(true);
-
-    try {
-      const current = watch("imageUrl") || [];
-      const fileUrl = current[index];
-
-      const fileName = fileUrl.split("/").pop()?.split("?")[0];
-
-      if (fileName) {
-        const { error } = await supabase.storage
-          .from("animals")
-          .remove([fileName]);
-
-        if (error) {
-          toast.error("Nie udało się usunąć zdjęcia z serwera");
-          return;
-        }
-      }
-
-      const updated = current.filter((_, i) => i !== index);
-
-      setValue("imageUrl", updated, {
-        shouldDirty: true,
+      setDeletedImages((prev) => {
+        if (prev.includes(fileUrl)) return prev;
+        return [...prev, fileUrl];
       });
-    } finally {
-      setIsDeleting(false);
+
+      setValue(
+        "imageUrl",
+        existingImages.filter((_, i) => i !== index),
+        { shouldDirty: true },
+      );
+    } else {
+      const pendingIndex = index - existingImages.length;
+      setPendingFiles((prev) => prev.filter((_, i) => i !== pendingIndex));
     }
   };
 
@@ -265,7 +302,7 @@ const EditAnimalPage = () => {
             <Label htmlFor="name">Zdjęcia (maksymalnie 5)</Label>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {Array.from({ length: MAX_IMAGES }).map((_, index) => {
-                const img = imageUrl[index];
+                const img = previewImages[index];
                 return (
                   <div
                     key={index}
@@ -274,18 +311,14 @@ const EditAnimalPage = () => {
                     {img ? (
                       <>
                         <span
-                          onClick={() =>
-                            !isDeleting && handleRemoveImage(index)
-                          }
+                          onClick={() => handleRemoveImage(index)}
                           className="absolute top-15 right-3 z-10 cursor-pointer rounded-full bg-white p-1 sm:p-2"
                         >
                           <Trash className="scale-80 text-red-600 sm:scale-100" />
                         </span>
 
                         <span
-                          onClick={() =>
-                            !isDeleting && handleRemoveImage(index)
-                          }
+                          onClick={() => {}}
                           className="absolute top-3 right-3 z-10 cursor-pointer rounded-full bg-white/10 p-1 sm:p-2"
                         >
                           <Star className="scale-80 text-yellow-600 sm:scale-100" />
@@ -302,11 +335,11 @@ const EditAnimalPage = () => {
                     ) : (
                       <div
                         onClick={() => {
-                          if (canAddMore && index === imageUrl.length) {
+                          if (canAddMore && index === previewImages.length) {
                             fileInputRef.current?.click();
                           }
                         }}
-                        className="flex size-full items-center justify-center text-gray-400"
+                        className="flex size-full cursor-pointer items-center justify-center text-gray-400"
                       >
                         <Plus size={26} />
                       </div>
