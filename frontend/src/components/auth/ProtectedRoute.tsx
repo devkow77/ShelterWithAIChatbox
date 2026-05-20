@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "ADMINISTRATOR" | "UZYTKOWNIK" | "PRACOWNIK";
+  requiredRole?: ("ADMINISTRATOR" | "UZYTKOWNIK" | "PRACOWNIK")[];
 }
 
 export const ProtectedRoute = ({
@@ -23,7 +23,7 @@ export const ProtectedRoute = ({
         return;
       }
 
-      if (requiredRole && user.role !== requiredRole) {
+      if (requiredRole && !requiredRole.includes(user.role)) {
         toast.error("Brak uprawnień do tej strony!");
         navigate("/");
       }

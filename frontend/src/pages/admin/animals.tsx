@@ -1,4 +1,4 @@
-import { Container, Input } from "@/components/ui";
+import { Container, DeleteAnimalDialog, Input } from "@/components/ui";
 import { toast } from "sonner";
 import { useEffect, useState, useMemo } from "react";
 import {
@@ -365,12 +365,10 @@ const AdminAnimalsPage = () => {
                           </a>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteAnimal(animal.id)}
-                          className="cursor-pointer text-red-600"
-                        >
-                          Usuń zwierzę
-                        </DropdownMenuItem>
+                        <DeleteAnimalDialog
+                          animalId={animal.id}
+                          onConfirm={handleDeleteAnimal}
+                        />
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

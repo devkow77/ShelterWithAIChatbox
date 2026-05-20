@@ -35,7 +35,12 @@ router.post(
   authorizeRoles(Role.ADMINISTRATOR),
   createUser,
 );
-router.patch('/:id', authenticateUser, updateUniqueUser);
+router.patch(
+  '/:id',
+  authenticateUser,
+  authorizeRoles(Role.ADMINISTRATOR),
+  updateUniqueUser,
+);
 router.patch('/password', authenticateUser, updatePassword);
 router.delete(
   '/:id',

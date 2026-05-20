@@ -3,8 +3,8 @@ import AdminAnimalsPage from "./animals";
 import EditAnimalPage from "./edit-animal";
 import AddAnimalPage from "./add-animal";
 import AdminWorkersPage from "./workers";
-import EditWorkerPage from "./edit-worker";
-import AddWorkerPage from "./add-worker";
+import EditUserPage from "./edit-user";
+import AddUserPage from "./add-user";
 
 export {
   AdminAccountPage,
@@ -12,6 +12,6 @@ export {
   EditAnimalPage,
   AddAnimalPage,
   AdminWorkersPage,
-  EditWorkerPage,
-  AddWorkerPage,
+  EditUserPage,
+  AddUserPage,
 };

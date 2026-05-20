@@ -24,10 +24,11 @@ import {
   EditAnimalPage,
   AddAnimalPage,
   AdminWorkersPage,
-  EditWorkerPage,
-  AddWorkerPage,
+  EditUserPage,
+  AddUserPage,
 } from "./pages/admin";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { WorkerUsersPage } from "./pages/worker";
 
 const queryClient = new QueryClient();
 
@@ -95,7 +96,7 @@ const router = createBrowserRouter([
   // SCIEZKI UŻYTKOWNIKA //
   {
     element: (
-      <ProtectedRoute requiredRole="UZYTKOWNIK">
+      <ProtectedRoute requiredRole={["UZYTKOWNIK"]}>
         <NavbarOnlyLayout />
       </ProtectedRoute>
     ),
@@ -109,7 +110,7 @@ const router = createBrowserRouter([
   // SCIEZKI ADMINISTRATORA //
   {
     element: (
-      <ProtectedRoute requiredRole="ADMINISTRATOR">
+      <ProtectedRoute requiredRole={["ADMINISTRATOR"]}>
         <NavbarOnlyLayout />
       </ProtectedRoute>
     ),
@@ -136,12 +137,27 @@ const router = createBrowserRouter([
         element: <AdminWorkersPage />,
       },
       {
-        path: "/admin/pracownicy/:id/edycja",
-        element: <EditWorkerPage />,
+        path: "/admin/uzytkownicy/:id/edycja",
+        element: <EditUserPage />,
       },
       {
-        path: "/admin/pracownicy/dodaj",
-        element: <AddWorkerPage />,
+        path: "/admin/uzytkownicy/dodaj",
+        element: <AddUserPage />,
+      },
+    ],
+  },
+  // SCIEZKI PRACOWNIKA I ADMINISTRATORA //
+  {
+    element: (
+      <ProtectedRoute requiredRole={["ADMINISTRATOR", "PRACOWNIK"]}>
+        <NavbarOnlyLayout />
+      </ProtectedRoute>
+    ),
+    path: "/pracownik",
+    children: [
+      {
+        path: "uzytkownicy",
+        element: <WorkerUsersPage />,
       },
     ],
   },

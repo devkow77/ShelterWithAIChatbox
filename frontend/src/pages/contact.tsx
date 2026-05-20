@@ -60,7 +60,7 @@ const ContactPage = () => {
     }
   };
 
-  const canSendMessage = !user || user.role === "UŻYTKOWNIK";
+  const canSendMessage = !user || user.role === "UZYTKOWNIK";
 
   return (
     <main>

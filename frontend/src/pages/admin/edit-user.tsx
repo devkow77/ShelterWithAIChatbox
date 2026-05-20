@@ -36,7 +36,7 @@ type AppUser = {
   createdAt: string;
 };
 
-export const workerSchema = z.object({
+export const userSchema = z.object({
   fullName: z.string().min(1, "Imię jest wymagane"),
   email: z
     .string()
@@ -46,7 +46,7 @@ export const workerSchema = z.object({
   imageUrl: z.string().optional(),
 });
 
-type UserFormData = z.infer<typeof workerSchema>;
+type UserFormData = z.infer<typeof userSchema>;
 
 type SelectorProps = {
   items: string[];
@@ -83,11 +83,11 @@ const GenericSelector = ({
   </Combobox>
 );
 
-const EditWorkerPage = () => {
+const EditUserPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const userRoles = ["PRACOWNIK", "ADMINISTRATOR"];
+  const userRoles = ["ADMINISTRATOR", "PRACOWNIK", "UZYTKOWNIK"];
   const userGenders = ["MEZCZYZNA", "KOBIETA"];
 
   const {
@@ -97,9 +97,9 @@ const EditWorkerPage = () => {
     reset,
     watch,
     setValue,
-    formState: { isSubmitting },
+    formState: { isSubmitting, errors },
   } = useForm<UserFormData>({
-    resolver: zodResolver(workerSchema),
+    resolver: zodResolver(userSchema),
     defaultValues: {
       fullName: "",
       email: "",
@@ -274,7 +274,6 @@ const EditWorkerPage = () => {
                 )}
               </div>
 
-              {/* ===== READ ONLY META ===== */}
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Weryfikacja 2FA</Label>
@@ -309,19 +308,34 @@ const EditWorkerPage = () => {
 
           <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
             <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
-              {/* IMIĘ I NAZWISKo */}
               <div className="space-y-2">
                 <Label>Imię i nazwisko</Label>
-                <Input {...register("fullName")} />
+                <Input
+                  {...register("fullName")}
+                  placeholder="Podaj imię i nazwisko..."
+                  className={errors.fullName ? "bg-red-600/20" : ""}
+                />
+                {errors.fullName && (
+                  <p className="text-xs font-medium text-red-600 lg:text-sm">
+                    {errors.fullName.message}
+                  </p>
+                )}
               </div>
 
-              {/* EMAIL */}
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input {...register("email")} />
+                <Input
+                  {...register("email")}
+                  placeholder="Podaj email..."
+                  className={errors.email ? "bg-red-600/20" : ""}
+                />
+                {errors.email && (
+                  <p className="text-xs font-medium text-red-600 lg:text-sm">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
 
-              {/* ROLA */}
               <div className="space-y-2">
                 <Label>Rola</Label>
                 <Controller
@@ -338,7 +352,6 @@ const EditWorkerPage = () => {
                 />
               </div>
 
-              {/* PŁEĆ */}
               <div className="space-y-2">
                 <Label>Płeć</Label>
                 <Controller
@@ -366,4 +379,4 @@ const EditWorkerPage = () => {
   );
 };
 
-export default EditWorkerPage;
+export default EditUserPage;

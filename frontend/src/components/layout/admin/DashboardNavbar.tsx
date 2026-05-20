@@ -28,7 +28,7 @@ const adminOptions: AdminOptions[] = [
   },
   {
     icon: UsersRound,
-    href: "/",
+    href: "/pracownik/uzytkownicy",
     name: "Zarządzaj użytkownikami",
   },
   {

@@ -95,7 +95,7 @@ const GenericSelector = ({
   </Combobox>
 );
 
-const AddWorkerPage = () => {
+const AddUserPage = () => {
   const navigate = useNavigate();
 
   const userRoles = ["ADMINISTRATOR", "PRACOWNIK"];
@@ -146,16 +146,13 @@ const AddWorkerPage = () => {
 
       if (pendingFile) {
         const fileName = `${Date.now()}-${pendingFile.name}`;
-
         const filePath = `users/${fileName}`;
 
         const { error } = await supabase.storage
           .from("users")
           .upload(filePath, pendingFile);
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
         const { data: publicUrlData } = supabase.storage
           .from("users")
@@ -175,7 +172,7 @@ const AddWorkerPage = () => {
         },
       );
 
-      toast.success("Nowy pracownik został utworzony!");
+      toast.success("Nowy użytkownik został utworzony!");
 
       navigate("/admin/pracownicy");
     } catch (err) {
@@ -185,7 +182,6 @@ const AddWorkerPage = () => {
         toast.error(
           err.response?.data?.msg || "Wystąpił błąd podczas zapisywania.",
         );
-
         return;
       }
 
@@ -200,7 +196,6 @@ const AddWorkerPage = () => {
 
     if (pendingFile || existingImage) {
       toast.error("Możesz dodać maksymalnie 1 zdjęcie.");
-
       return;
     }
 
@@ -209,7 +204,6 @@ const AddWorkerPage = () => {
 
   const handleRemoveImage = () => {
     setPendingFile(null);
-
     setValue("imageUrl", null);
 
     if (fileInputRef.current) {
@@ -222,7 +216,7 @@ const AddWorkerPage = () => {
       <Container className="mb-6 space-y-12 md:mb-10 md:space-y-16">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-green-900 md:text-5xl">
-            Dodaj pracownika
+            Dodaj użytkownika
           </h1>
 
           <p className="text-sm leading-6 font-medium md:text-base md:leading-7">
@@ -231,7 +225,6 @@ const AddWorkerPage = () => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* ZDJĘCIE */}
           <div className="space-y-6">
             <Label>Zdjęcie (maksymalnie 1)</Label>
 
@@ -272,19 +265,15 @@ const AddWorkerPage = () => {
             </div>
           </div>
 
-          {/* FORMULARZ */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            {/* IMIĘ I NAZWISKO */}
             <div className="space-y-2">
               <Label htmlFor="fullName">Imię i nazwisko</Label>
-
               <Input
                 id="fullName"
                 {...register("fullName")}
                 placeholder="Podaj imię i nazwisko..."
                 className={errors.fullName ? "bg-red-600/20" : ""}
               />
-
               {errors.fullName && (
                 <p className="text-xs font-medium text-red-600 lg:text-sm">
                   {errors.fullName.message}
@@ -292,17 +281,14 @@ const AddWorkerPage = () => {
               )}
             </div>
 
-            {/* EMAIL */}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-
               <Input
                 id="email"
                 {...register("email")}
                 placeholder="Podaj email..."
                 className={errors.email ? "bg-red-600/20" : ""}
               />
-
               {errors.email && (
                 <p className="text-xs font-medium text-red-600 lg:text-sm">
                   {errors.email.message}
@@ -310,18 +296,15 @@ const AddWorkerPage = () => {
               )}
             </div>
 
-            {/* HASŁO */}
             <div className="space-y-2">
               <Label htmlFor="password">Hasło</Label>
-
               <Input
                 id="password"
                 type="password"
-                {...register("password")}
                 placeholder="Podaj hasło..."
+                {...register("password")}
                 className={errors.password ? "bg-red-600/20" : ""}
               />
-
               {errors.password && (
                 <p className="text-xs font-medium text-red-600 lg:text-sm">
                   {errors.password.message}
@@ -329,7 +312,6 @@ const AddWorkerPage = () => {
               )}
             </div>
 
-            {/* PŁEĆ */}
             <div className="space-y-2">
               <Label>Płeć</Label>
 
@@ -345,9 +327,14 @@ const AddWorkerPage = () => {
                   />
                 )}
               />
+
+              {errors.gender && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.gender.message}
+                </p>
+              )}
             </div>
 
-            {/* ROLA */}
             <div className="space-y-2">
               <Label>Rola</Label>
 
@@ -363,6 +350,12 @@ const AddWorkerPage = () => {
                   />
                 )}
               />
+
+              {errors.role && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.role.message}
+                </p>
+              )}
             </div>
           </div>
 
@@ -372,7 +365,7 @@ const AddWorkerPage = () => {
             disabled={isSubmitting}
             className="w-full lg:w-auto"
           >
-            {isSubmitting ? "Dodawanie..." : "Dodaj nowego pracownika"}
+            {isSubmitting ? "Dodawanie..." : "Dodaj nowego użytkownika"}
           </Button>
         </form>
       </Container>
@@ -380,4 +373,4 @@ const AddWorkerPage = () => {
   );
 };
 
-export default AddWorkerPage;
+export default AddUserPage;

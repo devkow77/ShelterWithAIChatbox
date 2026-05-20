@@ -32,16 +32,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontalIcon } from "lucide-react";
 import axios from "axios";
-import { styleUserRole } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { DeleteUserDialog } from "@/components/ui";
 
-type WorkerType = {
+type UserType = {
   label: string;
   value: string;
 };
 
-type Worker = {
+type User = {
   id: number;
   fullName: string;
   gender: string;
@@ -53,7 +53,7 @@ type Worker = {
 };
 
 type SelectorProps = {
-  items: WorkerType[];
+  items: UserType[];
   placeholder: string;
   value: string[];
   onValueChange: (v: string[]) => void;
@@ -90,19 +90,15 @@ const GenericSelector = ({
   </Combobox>
 );
 
-const AdminWorkersPage = () => {
-  const [workers, setWorkers] = useState<Worker[]>([]);
+const WorkerUsersPage = () => {
+  const [users, setUsers] = useState<User[]>([]);
 
   const [searchQuery, setSearchQuery] = useState<string>(""); // stan do przechowywania wartości wyszukiwania
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]); // stan do przechowywania wybranych typów pracowników
   const [selectedGender, setSelectedGender] = useState<string[]>([]); // stan do przechowywania wybranych płci
 
-  const workerRoles: WorkerType[] = [
-    { label: "Administrator", value: "ADMINISTRATOR" },
-    { label: "Pracownik", value: "PRACOWNIK" },
-  ];
+  const { user: loggedUser } = useAuth();
 
-  const workerGenders: WorkerType[] = [
+  const userGenders: UserType[] = [
     { label: "Mężczyzna", value: "MEZCZYZNA" },
     { label: "Kobieta", value: "KOBIETA" },
   ];
@@ -110,8 +106,8 @@ const AdminWorkersPage = () => {
   useEffect(() => {
     const fetchWorkers = async () => {
       try {
-        const res = await axios.get("/api/users/workers");
-        setWorkers(res.data);
+        const res = await axios.get("/api/users");
+        setUsers(res.data);
       } catch (err) {
         console.error(err);
       }
@@ -120,33 +116,29 @@ const AdminWorkersPage = () => {
     fetchWorkers();
   }, []);
 
-  const filteredWorkers = useMemo(() => {
-    return workers.filter((worker) => {
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
       const matchesSearch =
         searchQuery.trim() === "" ||
-        worker.fullName.toLowerCase().includes(searchQuery.toLowerCase());
-
-      const matchesRoles =
-        selectedRoles.length === 0 || selectedRoles.includes(worker.role);
+        user.fullName.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesGender =
-        selectedGender.length === 0 || selectedGender.includes(worker.gender);
+        selectedGender.length === 0 || selectedGender.includes(user.gender);
 
-      return matchesSearch && matchesRoles && matchesGender;
+      return matchesSearch && matchesGender;
     });
-  }, [workers, searchQuery, selectedRoles, selectedGender]);
+  }, [users, searchQuery, selectedGender]);
 
   // Funkcja do resetowania wszystkich filtrów
   const resetFilters = () => {
-    setSelectedRoles([]);
     setSelectedGender([]);
     setSearchQuery("");
   };
 
-  const handleDeleteWorker = async (id: number) => {
+  const handleDeleteUser = async (id: number) => {
     try {
       await axios.delete(`/api/users/${id}`);
-      setWorkers((prev) => prev.filter((a) => a.id !== id));
+      setUsers((prev) => prev.filter((a) => a.id !== id));
       toast.success("Pomyślnie usunięto użytkownika!");
     } catch (err) {
       console.error(err);
@@ -159,10 +151,12 @@ const AdminWorkersPage = () => {
         <section id="info" className="space-y-6">
           <div className="space-y-2">
             <h1 className="text-3xl font-bold text-green-900 md:text-5xl">
-              Zarządzaj pracownikami
+              {loggedUser?.role === "ADMINISTRATOR"
+                ? "Zarządzaj użytkownikami"
+                : "Przeglądaj użytkowników"}
             </h1>
             <p className="text-sm leading-6 font-medium md:text-base md:leading-7">
-              W tym panelu znajdują się wszyscy pracownicy schroniska.
+              W tym panelu znajdują się wszyscy użytkownicy schroniska.
             </p>
           </div>
           <DashboardNavbar />
@@ -180,14 +174,7 @@ const AdminWorkersPage = () => {
             </div>
 
             <GenericSelector
-              items={workerRoles}
-              placeholder="Rola pracownika"
-              value={selectedRoles}
-              onValueChange={setSelectedRoles}
-            />
-
-            <GenericSelector
-              items={workerGenders}
+              items={userGenders}
               placeholder="Płeć"
               value={selectedGender}
               onValueChange={setSelectedGender}
@@ -197,83 +184,80 @@ const AdminWorkersPage = () => {
               Resetuj filtry
             </Button>
 
-            <Button variant="success">
-              <a href="/admin/uzytkownicy/dodaj">Dodaj użytkownika</a>
-            </Button>
+            {loggedUser?.role === "ADMINISTRATOR" ? (
+              <Button variant="success">
+                <a href="/admin/uzytkownicy/dodaj">Dodaj użytkownika</a>
+              </Button>
+            ) : null}
           </div>
 
           <Table>
-            <TableCaption>Lista pracowników schroniska</TableCaption>
+            <TableCaption>Lista użytkowników schroniska</TableCaption>
             <TableHeader>
               <TableRow>
                 <TableHead>Imię i nazwisko</TableHead>
-                <TableHead>Rola</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Płeć</TableHead>
-                <TableHead>Pracuje od</TableHead>
+                <TableHead>Zarejestrowany od</TableHead>
                 <TableHead className="text-right">Opcje</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredWorkers.map((worker) => (
-                <TableRow key={worker.id}>
+              {filteredUsers.map((user) => (
+                <TableRow key={user.id}>
                   <TableCell className="flex items-center gap-x-4 font-medium">
-                    {worker.imageUrl ? (
+                    {user.imageUrl ? (
                       <img
-                        src={worker.imageUrl}
+                        src={user.imageUrl}
                         className="size-12 rounded-full object-cover"
-                        alt={worker.fullName}
+                        alt={user.fullName}
                       />
                     ) : (
                       <div className="size-12 rounded-full bg-gray-200" />
                     )}
-                    {worker.fullName}
+                    {user.fullName}
                   </TableCell>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.gender}</TableCell>
                   <TableCell>
-                    <span
-                      className={`${styleUserRole(
-                        worker.role,
-                      )} rounded-2xl p-2 text-xs`}
-                    >
-                      {worker.role}
-                    </span>
+                    {new Date(user.createdAt).toLocaleDateString("pl-PL")} r.
                   </TableCell>
-                  <TableCell>{worker.gender}</TableCell>
-                  <TableCell>
-                    {new Date(worker.createdAt).toLocaleDateString("pl-PL")} r.
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="transparent"
-                          size="icon"
-                          className="size-8"
-                        >
-                          <MoreHorizontalIcon />
-                          <span className="sr-only">Open menu</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <a href={`/admin/uzytkownicy/${worker.id}/edycja`}>
-                            Edytuj dane
-                          </a>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DeleteUserDialog
-                          userId={worker.id}
-                          onConfirm={handleDeleteWorker}
-                        />
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+                  {loggedUser?.role === "ADMINISTRATOR" ? (
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="transparent"
+                            size="icon"
+                            className="size-8"
+                          >
+                            <MoreHorizontalIcon />
+                            <span className="sr-only">Open menu</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem>
+                            <a href={`/admin/uzytkownicy/${user.id}/edycja`}>
+                              Edytuj dane
+                            </a>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DeleteUserDialog
+                            userId={user.id}
+                            onConfirm={handleDeleteUser}
+                          />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  ) : null}
                 </TableRow>
               ))}
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={4}>Suma pracowników</TableCell>
-                <TableCell className="text-right">{workers.length}</TableCell>
+                <TableCell colSpan={4}>Suma użytkowników</TableCell>
+                <TableCell className="text-right">{users.length}</TableCell>
               </TableRow>
             </TableFooter>
           </Table>
@@ -283,4 +267,4 @@ const AdminWorkersPage = () => {
   );
 };
 
-export default AdminWorkersPage;
+export default WorkerUsersPage;

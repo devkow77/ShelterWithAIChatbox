@@ -22,7 +22,7 @@ interface LoginResponse {
   user: {
     fullName: string;
     email: string;
-    role: "UŻYTKOWNIK" | "PRACOWNIK" | "ADMINISTRATOR";
+    role: "UZYTKOWNIK" | "PRACOWNIK" | "ADMINISTRATOR";
   };
 }
 
