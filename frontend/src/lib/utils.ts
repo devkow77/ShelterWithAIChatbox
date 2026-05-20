@@ -27,3 +27,23 @@ export const styleAnimalStatus = (status: string) => {
 
   return styles;
 };
+
+export const styleUserRole = (role: string) => {
+  let styles: string = "";
+
+  switch (role) {
+    case "UZYTKOWNIK":
+      styles = "bg-slate-200 text-slate-600";
+      break;
+    case "PRACOWNIK":
+      styles = "bg-blue-200 text-blue-600";
+      break;
+    case "ADMINISTRATOR":
+      styles = "bg-red-200 text-red-600";
+      break;
+    default:
+      styles = "bg-slate-200 text-slate-600";
+  }
+
+  return styles;
+};

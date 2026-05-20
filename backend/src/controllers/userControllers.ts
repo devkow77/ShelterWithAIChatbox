@@ -1,20 +1,27 @@
 import { StatusCodes } from 'http-status-codes';
 import prisma from '../prisma';
 import { type Request, type Response } from 'express';
-import { updatePasswordSchema } from '../validators/user.validator';
+import {
+  updatePasswordSchema,
+  updateUserSchema,
+  createUserSchema,
+} from '../validators/user.validator';
 import bcrypt from 'bcrypt';
+import { Role } from '../generated/prisma/enums';
 
-// Aktualizacja hasła
+// 1. Aktualizacja hasła
 export const updatePassword = async (req: Request, res: Response) => {
   const parsedBody = updatePasswordSchema.safeParse(req.body);
 
   if (!parsedBody.success) {
-    return res
-      .status(StatusCodes.BAD_REQUEST)
-      .json({ msg: 'Nieprawidłowy format danych!' });
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: 'Nieprawidłowy format danych!',
+    });
   }
 
-  if (!req.userId) {
+  const userId = req.userId;
+
+  if (!userId) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       msg: 'Brak tokenu, autoryzacja odmówiona!',
     });
@@ -22,46 +29,39 @@ export const updatePassword = async (req: Request, res: Response) => {
 
   try {
     const existingUser = await prisma.user.findUnique({
-      where: { id: req.userId },
+      where: { id: userId },
     });
 
     if (!existingUser) {
-      return res
-        .status(StatusCodes.NOT_FOUND)
-        .json({ msg: 'Nie ma takiego użytkownika!' });
+      return res.status(StatusCodes.NOT_FOUND).json({
+        msg: 'Nie ma takiego użytkownika!',
+      });
     }
 
     const { newPassword, currentPassword } = parsedBody.data;
 
-    // sprawdzenie czy podane obecne hasło jest prawdziwe
-    const isMatchPassword = await bcrypt.compare(
+    const isMatch = await bcrypt.compare(
       currentPassword,
       existingUser.password,
     );
 
-    if (!isMatchPassword) {
+    if (!isMatch) {
       return res.status(StatusCodes.UNAUTHORIZED).json({
         msg: 'Nieprawidłowe obecne hasło!',
       });
     }
 
-    // sprawdzenie czy nowe hasło jest takie same jak aktualne
-    const isSamePassword = await bcrypt.compare(
-      newPassword,
-      existingUser.password,
-    );
-
-    if (isSamePassword) {
+    if (currentPassword === newPassword) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         msg: 'Nowe hasło musi być inne niż obecne!',
       });
     }
 
-    const newHashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
     await prisma.user.update({
-      where: { id: req.userId },
-      data: { password: newHashedPassword },
+      where: { id: userId },
+      data: { password: hashedPassword },
     });
 
     return res
@@ -73,9 +73,179 @@ export const updatePassword = async (req: Request, res: Response) => {
       })
       .status(StatusCodes.OK)
       .json({ msg: 'Hasło zostało pomyślnie zaktualizowane!' });
+  } catch {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: 'Wewnętrzny błąd serwera!',
+    });
+  }
+};
+
+// 2. Pobierz wszystkich pracowników
+export const getWorkers = async (_req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        role: {
+          not: Role.UZYTKOWNIK,
+        },
+      },
+    });
+
+    return res.status(StatusCodes.OK).json(users);
+  } catch {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: 'Wewnętrzny błąd serwera!',
+    });
+  }
+};
+
+// 3. Pobierz wszystkich użytkowników
+export const getUsers = async (_req: Request, res: Response) => {
+  try {
+    const users = await prisma.user.findMany({
+      where: {
+        role: Role.UZYTKOWNIK,
+      },
+    });
+
+    return res.status(StatusCodes.OK).json(users);
+  } catch {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: 'Wewnętrzny błąd serwera!',
+    });
+  }
+};
+
+// 4. Pobierz dane użytkownika po id
+export const getUniqueUser = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const numericId = Number(id);
+
+  if (isNaN(numericId)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: 'Nieprawidłowe ID użytkownika!',
+    });
+  }
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: numericId },
+    });
+
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        msg: 'Nie ma użytkownika z takim id!',
+      });
+    }
+
+    return res.status(StatusCodes.OK).json(user);
+  } catch {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: 'Wewnętrzny błąd serwera!',
+    });
+  }
+};
+
+// 5. Zaktualizuj dane użytkownika
+export const updateUniqueUser = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const numericId = Number(id);
+
+  if (isNaN(numericId)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: 'Nieprawidłowe ID użytkownika!',
+    });
+  }
+
+  const parsedBody = updateUserSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: 'Nieprawidłowy format danych!',
+    });
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: numericId },
+      data: parsedBody.data,
+    });
+
+    return res.status(StatusCodes.OK).json(updatedUser);
+  } catch {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: 'Wewnętrzny błąd serwera podczas aktualizacji!',
+    });
+  }
+};
+
+// 6. Usuń zwierzę o podanym id
+export const deleteUniqueUser = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const numericId = Number(id);
+
+  if (isNaN(numericId)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: 'Nieprawidłowe ID użytkownika!',
+    });
+  }
+
+  try {
+    const existingUser = await prisma.user.findUnique({
+      where: { id: numericId },
+    });
+
+    if (!existingUser) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        msg: 'Użytkownik nie istnieje!',
+      });
+    }
+
+    if (existingUser.role === Role.ADMINISTRATOR) {
+      return res.status(StatusCodes.FORBIDDEN).json({
+        msg: 'Nie można usunąć administratora!',
+      });
+    }
+
+    await prisma.user.delete({
+      where: { id: numericId },
+    });
+
+    return res.status(StatusCodes.OK).json({
+      msg: 'Pomyślnie usunięto użytkownika!',
+    });
   } catch (err) {
-    return res
-      .status(StatusCodes.INTERNAL_SERVER_ERROR)
-      .json({ msg: 'Wewnętrzny błąd serwera!' });
+    console.error(err);
+
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: 'Wewnętrzny błąd serwera!',
+    });
+  }
+};
+
+// 7. Utwórz nowego użytkownika
+export const createUser = async (req: Request, res: Response) => {
+  const parsedBody = createUserSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: 'Nieprawidłowy format danych!',
+      errors: parsedBody.error.issues,
+    });
+  }
+
+  try {
+    const newAnimal = await prisma.user.create({
+      data: parsedBody.data,
+    });
+
+    return res.status(StatusCodes.CREATED).json(newAnimal);
+  } catch (err) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: 'Wewnętrzny błąd serwera podczas tworzenia!',
+    });
   }
 };

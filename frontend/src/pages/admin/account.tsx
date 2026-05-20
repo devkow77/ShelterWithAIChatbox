@@ -48,7 +48,7 @@ const AdminAccountPage = () => {
 
   const onSubmit = async (data: UpdatePasswordFormData) => {
     try {
-      const res = await axios.patch("/api/user/password", data, {
+      const res = await axios.patch("/api/users/password", data, {
         withCredentials: true,
       });
       toast.success(res.data.msg);

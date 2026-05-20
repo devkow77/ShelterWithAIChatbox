@@ -14,30 +14,34 @@ const usersSeed = async () => {
         fullName: 'Admin',
         email: 'admin@gmail.com',
         password: hashedPassword,
+        gender: 'MEZCZYZNA',
         role: 'ADMINISTRATOR',
       },
       {
         fullName: 'Pracownik Ola',
         email: 'pracownik@gmail.com',
-
         password: hashedPassword,
+        gender: 'KOBIETA',
         role: 'PRACOWNIK',
       },
       {
         fullName: 'Pracownik Jan',
         email: 'pracownik2@gmail.com',
         password: hashedPassword,
+        gender: 'MEZCZYZNA',
         role: 'PRACOWNIK',
       },
       {
         fullName: 'Michał',
         email: 'michal@gmail.com',
         password: hashedPassword,
+        gender: 'MEZCZYZNA',
       },
       {
         fullName: 'Dominika',
         email: 'dominika@gmail.com',
         password: hashedPassword,
+        gender: 'KOBIETA',
       },
     ],
   });

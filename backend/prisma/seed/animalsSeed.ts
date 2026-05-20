@@ -1,13 +1,16 @@
 import prisma from '../../src/prisma';
-import { AnimalStatus } from '../../src/generated/prisma/enums';
+import {
+  AnimalGender,
+  AnimalSize,
+  AnimalStatus,
+  AnimalType,
+} from '../../src/generated/prisma/enums';
 
 const animalsSeed = async () => {
   console.log('Seedowanie zwierząt...');
 
-  // Usuń istniejące zwierzęta
   await prisma.animal.deleteMany();
 
-  // Polskie cechy pasujące do formularza
   const traitsList = [
     'energiczny',
     'spokojny',
@@ -18,17 +21,58 @@ const animalsSeed = async () => {
     'łagodny',
   ];
 
-  function getRandomTraits() {
-    const shuffled = [...traitsList].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, Math.floor(Math.random() * 3) + 1).join(', ');
-  }
+  const locations = [
+    'Warszawa',
+    'Kraków',
+    'Rzeszów',
+    'Lublin',
+    'Poznań',
+    'Wrocław',
+    'Gdańsk',
+    'Katowice',
+    'Białystok',
+    'Szczecin',
+    'Tarnów',
+    'Przemyśl',
+    'Kielce',
+    'Zakopane',
+    'Olsztyn',
+  ];
 
-  function getRandomAge() {
-    return Math.floor(Math.random() * 15) + 1; // 1-15 lat
-  }
+  const randomFrom = <T>(arr: T[]): T => {
+    if (arr.length === 0) {
+      throw new Error('Cannot pick from empty array');
+    }
+
+    const index = Math.floor(Math.random() * arr.length);
+    return arr[index]!;
+  };
+
+  const getRandomTraits = (): string => {
+    const shuffled = [...traitsList].sort(() => 0.5 - Math.random());
+    const count = Math.floor(Math.random() * 3) + 1;
+
+    return shuffled.slice(0, count).join(', ');
+  };
+
+  const getRandomAge = (): number => Math.floor(Math.random() * 15) + 1;
+
+  const getRandomLocation = (): string => {
+    return randomFrom(locations);
+  };
+
+  const getRandomFoundDate = (): Date => {
+    const random = Math.random();
+
+    if (random > 0.5) {
+      return new Date();
+    }
+
+    return new Date('2026-05-14T10:00:00');
+  };
 
   const animalNames = {
-    pies: [
+    PIES: [
       'Felix',
       'Burek',
       'Reksio',
@@ -40,7 +84,7 @@ const animalsSeed = async () => {
       'Lassie',
       'Rex',
     ],
-    kot: [
+    KOT: [
       'Mruczek',
       'Luna',
       'Kitty',
@@ -52,7 +96,7 @@ const animalsSeed = async () => {
       'Cleo',
       'Tiger',
     ],
-    królik: [
+    KROLIK: [
       'Bunny',
       'Fluffy',
       'Puszek',
@@ -64,7 +108,7 @@ const animalsSeed = async () => {
       'Binky',
       'Uszatek',
     ],
-    inny: [
+    INNE: [
       'Chomik',
       'Papuga',
       'Świnka',
@@ -76,49 +120,63 @@ const animalsSeed = async () => {
       'Koza',
       'Alpaka',
     ],
-  };
+  } as const;
 
-  const animals: any[] = [];
-
-  // Statusy zgodne z Twoim frontendem
-  const statusOptions: AnimalStatus[] = [
-    AnimalStatus.ADOPTOWANY,
-    AnimalStatus.SZUKA_DOMU,
-    AnimalStatus.W_TRAKCIE_ADOPCJI,
-    AnimalStatus.ZNALEZIONY,
+  const genderOptions: AnimalGender[] = [
+    AnimalGender.SAMICA,
+    AnimalGender.SAMIEC,
   ];
 
-  const getImageUrl = (path: string) =>
-    `${process.env.SUPABASE_STORAGE_URL}/storage/v1/object/public/animals/${path}`;
+  const sizeOptions: AnimalSize[] = [
+    AnimalSize.MALY,
+    AnimalSize.SREDNI,
+    AnimalSize.DUZY,
+  ];
 
-  // Helper do tworzenia obiektów zwierząt
-  const createAnimalData = (name: string, type: string) => ({
-    name,
-    type,
-    gender: Math.random() > 0.5 ? 'samiec' : 'samica',
-    size: ['mały', 'średni', 'duży'][Math.floor(Math.random() * 3)],
-    status: statusOptions[Math.floor(Math.random() * statusOptions.length)],
-    traits: getRandomTraits(),
-    age: getRandomAge(),
-    description: `${name} szuka nowego, kochającego domu. Jest bardzo ${traitsList[Math.floor(Math.random() * traitsList.length)]}.`,
-    imageUrl: [],
+  const getStatusByDate = (foundAt: Date): AnimalStatus => {
+    const now = new Date();
+
+    const diffInMs = now.getTime() - foundAt.getTime();
+    const MS_PER_DAY = 1000 * 60 * 60 * 24;
+    const diffInDays = Math.floor(diffInMs / MS_PER_DAY);
+
+    return diffInDays >= 7 ? AnimalStatus.SZUKA_DOMU : AnimalStatus.ZNALEZIONY;
+  };
+
+  const createAnimalData = (name: string, type: AnimalType) => {
+    const foundAt = getRandomFoundDate();
+
+    return {
+      name,
+      type,
+      gender: randomFrom(genderOptions),
+      size: randomFrom(sizeOptions),
+      status: getStatusByDate(foundAt),
+      traits: getRandomTraits(),
+      age: getRandomAge(),
+      description: `${name} szuka nowego, kochającego domu.`,
+      foundAt,
+      foundLocation: getRandomLocation(),
+      imageUrl: [],
+    };
+  };
+
+  const animals: ReturnType<typeof createAnimalData>[] = [];
+
+  animalNames.PIES.forEach((name) => {
+    animals.push(createAnimalData(name, AnimalType.PIES));
   });
 
-  // Dodawanie zwierząt do tablicy
-  animalNames.pies.forEach((name) => {
-    animals.push(createAnimalData(name, 'pies'));
+  animalNames.KOT.forEach((name) => {
+    animals.push(createAnimalData(name, AnimalType.KOT));
   });
 
-  animalNames.kot.forEach((name) => {
-    animals.push(createAnimalData(name, 'kot'));
+  animalNames.KROLIK.forEach((name) => {
+    animals.push(createAnimalData(name, AnimalType.KROLIK));
   });
 
-  animalNames.królik.forEach((name) => {
-    animals.push(createAnimalData(name, 'królik'));
-  });
-
-  animalNames.inny.forEach((name) => {
-    animals.push(createAnimalData(name, 'inny'));
+  animalNames.INNE.forEach((name) => {
+    animals.push(createAnimalData(name, AnimalType.INNE));
   });
 
   await prisma.animal.createMany({

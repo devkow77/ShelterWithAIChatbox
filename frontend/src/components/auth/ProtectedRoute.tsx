@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
-  requiredRole?: "ADMINISTRATOR" | "UŻYTKOWNIK" | "PRACOWNIK";
+  requiredRole?: "ADMINISTRATOR" | "UZYTKOWNIK" | "PRACOWNIK";
 }
 
 export const ProtectedRoute = ({

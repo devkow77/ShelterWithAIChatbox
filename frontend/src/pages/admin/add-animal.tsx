@@ -116,7 +116,7 @@ const GenericSelector = ({
   </Combobox>
 );
 
-const EditAnimalPage = () => {
+const AddAnimalPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -134,7 +134,6 @@ const EditAnimalPage = () => {
     register,
     handleSubmit,
     control,
-    reset,
     watch,
     setValue,
     formState: { errors, isSubmitting },
@@ -144,7 +143,7 @@ const EditAnimalPage = () => {
       name: "",
       type: "INNE",
       gender: "SAMIEC",
-      status: "SZUKA_DOMU",
+      status: "ZNALEZIONY",
       age: 0,
       size: "SREDNI",
       traits: "",
@@ -169,38 +168,6 @@ const EditAnimalPage = () => {
   ];
 
   const canAddMore = previewImages.length < MAX_IMAGES;
-
-  // Efekt do pobierania danych
-  useEffect(() => {
-    const handleFetchAnimal = async () => {
-      try {
-        const res = await axios.get<Animal>(`/api/animals/${id}`);
-        const data = res.data;
-
-        reset({
-          name: data.name,
-          type: data.type as AnimalFormData["type"],
-          gender: data.gender as AnimalFormData["gender"],
-          status: data.status as AnimalFormData["status"],
-          age: data.age,
-          size: data.size as AnimalFormData["size"],
-          traits: data.traits,
-          description: data.description,
-          imageUrl: data.imageUrl || [],
-          foundAt: data.foundAt
-            ? new Date(data.foundAt).toISOString().split("T")[0]
-            : "",
-          foundLocation: data.foundLocation,
-        });
-      } catch (err) {
-        console.error("Błąd podczas pobierania:", err);
-        toast.error("Nie udało się pobrać danych zwierzęcia.");
-        navigate("/admin/zwierzeta");
-      }
-    };
-
-    if (id) handleFetchAnimal();
-  }, [id, reset]); // Dodano id i reset jako zależności
 
   useEffect(() => {
     const objectUrls = pendingFiles.map((file) => URL.createObjectURL(file));
@@ -247,8 +214,8 @@ const EditAnimalPage = () => {
         if (error) throw error;
       }
 
-      await axios.patch(
-        `/api/animals/${id}`,
+      await axios.post(
+        `/api/animals/`,
         {
           ...data,
           imageUrl: [...(data.imageUrl || []), ...uploadedUrls],
@@ -259,7 +226,7 @@ const EditAnimalPage = () => {
       setPendingFiles([]);
       setDeletedImages([]);
 
-      toast.success("Dane zostały zaktualizowane!");
+      toast.success("Nowe zwierzę zostało utworzone!");
 
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -268,15 +235,6 @@ const EditAnimalPage = () => {
       navigate("/admin/zwierzeta");
     } catch (err) {
       console.error(err);
-
-      if (axios.isAxiosError(err)) {
-        const message =
-          err.response?.data?.msg || "Wystąpił błąd podczas zapisywania.";
-
-        toast.error(message);
-        return;
-      }
-
       toast.error("Wystąpił błąd podczas zapisywania.");
     }
   };
@@ -329,11 +287,11 @@ const EditAnimalPage = () => {
       <Container className="mb-6 space-y-12 md:mb-10 md:space-y-16">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold text-green-900 md:text-5xl">
-            Edytuj dane
+            Dodaj zwierzę
           </h1>
           <p className="text-sm leading-6 font-medium md:text-base md:leading-7">
-            Wprowadź zmiany w profilu zwierzęcia poniżej. Pamiętaj, aby zapisać
-            po zakończeniu edycji.
+            Wprowadź wszystkie dane zwierzęcia poniżej. Pamiętaj, aby zapisać po
+            zakończeniu.
           </p>
         </div>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -406,6 +364,7 @@ const EditAnimalPage = () => {
                   id="name"
                   {...register("name")}
                   placeholder="Podaj imię..."
+                  className={errors.name && "bg-red-600/20"}
                 />
                 {errors.name && (
                   <p className="text-xs font-medium text-red-600 lg:text-sm">
@@ -424,6 +383,7 @@ const EditAnimalPage = () => {
                   max={25}
                   {...register("age")}
                   placeholder="Podaj wiek..."
+                  className={errors.age && "bg-red-600/20"}
                 />
                 {errors.age && (
                   <p className="text-xs font-medium text-red-600 lg:text-sm">
@@ -528,8 +488,14 @@ const EditAnimalPage = () => {
                 <Input
                   id="traits"
                   {...register("traits")}
-                  placeholder="Wpisz cechy po przecinku..."
+                  placeholder="Podaj cechy po przecinku..."
+                  className={errors.traits && "bg-red-600/20"}
                 />
+                {errors.traits && (
+                  <p className="text-xs font-medium text-red-600 lg:text-sm">
+                    {errors.traits.message}
+                  </p>
+                )}
               </div>
 
               {/* ZNALEZIONY (MIEJSCE) */}
@@ -538,7 +504,7 @@ const EditAnimalPage = () => {
                 <Input
                   id="foundLocation"
                   {...register("foundLocation")}
-                  placeholder="Napisz miejscowość..."
+                  placeholder="Podaj miejscowość..."
                   className={errors.foundLocation && "bg-red-600/20"}
                 />
                 {errors.foundLocation && (
@@ -572,8 +538,8 @@ const EditAnimalPage = () => {
               <Textarea
                 id="description"
                 {...register("description")}
-                className="h-50 resize-none lg:h-full"
                 placeholder="Napisz coś więcej o zwierzęciu..."
+                className={`h-50 resize-none lg:h-full ${errors.description && "bg-red-600/20"}`}
               />
               {errors.description && (
                 <p className="text-xs font-medium text-red-600 lg:text-sm">
@@ -589,7 +555,7 @@ const EditAnimalPage = () => {
             disabled={isSubmitting}
             className="w-full lg:w-auto"
           >
-            {isSubmitting ? "Zapisywanie..." : "Zaktualizuj dane zwierzęcia"}
+            {isSubmitting ? "Dodawanie..." : "Dodaj nowe zwierzę"}
           </Button>
         </form>
       </Container>
@@ -597,4 +563,4 @@ const EditAnimalPage = () => {
   );
 };
 
-export default EditAnimalPage;
+export default AddAnimalPage;

@@ -4,7 +4,7 @@ import axios from "axios";
 interface User {
   fullName: string;
   email: string;
-  role: "UŻYTKOWNIK" | "PRACOWNIK" | "ADMINISTRATOR";
+  role: "UZYTKOWNIK" | "PRACOWNIK" | "ADMINISTRATOR";
 }
 
 interface AuthState {

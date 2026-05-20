@@ -7,10 +7,52 @@ datasource db {
   provider = "postgresql"
 }
 
-enum ROLE {
-  UŻYTKOWNIK
+enum Gender {
+  MEZCZYZNA
+  KOBIETA
+}
+
+enum Role {
+  UZYTKOWNIK
   PRACOWNIK
   ADMINISTRATOR
+}
+
+model User {
+  id               Int      @id @default(autoincrement())
+  fullName         String
+  email            String   @unique
+  password         String
+  gender           Gender   @default(MEZCZYZNA)
+  role             Role     @default(UZYTKOWNIK)
+
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  imageUrl         String?
+}
+
+enum AnimalType {
+  PIES
+  KOT
+  KROLIK
+  CHOMIK
+  ZOLW
+  INNE
+}
+
+enum AnimalGender {
+  SAMICA
+  SAMIEC
+}
+
+enum AnimalSize {
+  MALY
+  SREDNI
+  DUZY
 }
 
 enum AnimalStatus {
@@ -20,34 +62,19 @@ enum AnimalStatus {
   ADOPTOWANY
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  fullName  String
-  email     String   @unique
-  password  String
-  role      ROLE     @default(UŻYTKOWNIK)
-
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
 model Animal {
-  id          Int           @id @default(autoincrement())
-  name        String
-  type        String
-  gender      String
-  size        String
-  traits      String
-  age         Int
-  description String
+  id               Int           @id @default(autoincrement())
+  name             String
+  type             AnimalType    @default(INNE)
+  gender           AnimalGender  @default(SAMIEC)
+  size             AnimalSize    @default(SREDNI)
+  traits           String
+  age              Int   
+  description      String
 
-  status      AnimalStatus  @default(ZNALEZIONY)
-  foundAt     DateTime?     
-  foundLocation String?     
-  availableFrom DateTime?   
+  status           AnimalStatus  @default(ZNALEZIONY)
+  foundAt          DateTime     
+  foundLocation    String      
 
-  imageUrl        String[]
+  imageUrl         String[]
 }

@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import nodemailer from 'nodemailer';
 import { contactSchema } from '../validators/message.validator';

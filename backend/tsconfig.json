@@ -4,6 +4,7 @@
     "target": "ES2022",
     "types": ["node", "jest"],
     "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
     "esModuleInterop": true,
     "sourceMap": true,
     "declaration": true,
@@ -17,9 +18,23 @@
     "moduleDetection": "force",
     "skipLibCheck": true,
     "outDir": "./dist",
+    "rootDir": "../",
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    },
     "forceConsistentCasingInFileNames": true,
     "typeRoots": ["./node_modules/@types", "./src/@types"]
   },
-  "include": ["src/**/*", "src/@types/express.d.ts", "prisma"],
+  "include": [
+    "src",
+    "../shared",
+    "src/**/*",
+    "src/@types/express.d.ts",
+    "prisma",
+    "src/validators/animal.validator.ts",
+    "src/validators/auth.validator.ts",
+    "src/validators/message.validator.ts",
+    "src/validators/user.validator.ts"
+  ],
   "exclude": ["node_modules"]
 }

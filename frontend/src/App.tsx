@@ -21,8 +21,11 @@ import { AccountPage } from "./pages/client";
 import {
   AdminAccountPage,
   AdminAnimalsPage,
-  AdminWorkersPage,
   EditAnimalPage,
+  AddAnimalPage,
+  AdminWorkersPage,
+  EditWorkerPage,
+  AddWorkerPage,
 } from "./pages/admin";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
@@ -92,7 +95,7 @@ const router = createBrowserRouter([
   // SCIEZKI UŻYTKOWNIKA //
   {
     element: (
-      <ProtectedRoute requiredRole="UŻYTKOWNIK">
+      <ProtectedRoute requiredRole="UZYTKOWNIK">
         <NavbarOnlyLayout />
       </ProtectedRoute>
     ),
@@ -121,12 +124,24 @@ const router = createBrowserRouter([
         element: <AdminAnimalsPage />,
       },
       {
-        path: "/admin/zwierzeta/:gatunek/:id/edycja",
+        path: "/admin/zwierzeta/:id/edycja",
         element: <EditAnimalPage />,
+      },
+      {
+        path: "/admin/zwierzeta/dodaj",
+        element: <AddAnimalPage />,
       },
       {
         path: "/admin/pracownicy",
         element: <AdminWorkersPage />,
+      },
+      {
+        path: "/admin/pracownicy/:id/edycja",
+        element: <EditWorkerPage />,
+      },
+      {
+        path: "/admin/pracownicy/dodaj",
+        element: <AddWorkerPage />,
       },
     ],
   },

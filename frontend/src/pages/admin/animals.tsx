@@ -110,7 +110,7 @@ const AgeSlider = ({
 const AdminAnimalsPage = () => {
   const [animals, setAnimals] = useState<Animal[]>([]);
 
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [selectedAnimals, setSelectedAnimals] = useState<string[]>([]);
   const [selectedGender, setSelectedGender] = useState<string[]>([]);
   const [selectedStatutes, setSelectedStatutes] = useState<string[]>([]);
@@ -119,14 +119,17 @@ const AdminAnimalsPage = () => {
   const [ageRange, setAgeRange] = useState<[number, number]>([0, 25]);
 
   const animalTypes: AnimalType[] = [
-    { label: "Pies", value: "pies" },
-    { label: "Kot", value: "kot" },
-    { label: "Króliki", value: "królik" },
+    { label: "Pies", value: "PIES" },
+    { label: "Kot", value: "KOT" },
+    { label: "Królik", value: "KROLIK" },
+    { label: "Chomik", value: "CHOMIK" },
+    { label: "Zółw", value: "ZOLW" },
+    { label: "Inne", value: "INNE" },
   ];
 
   const animalGenders: AnimalType[] = [
-    { label: "Samiec", value: "samiec" },
-    { label: "Samica", value: "samica" },
+    { label: "Samiec", value: "SAMIEC" },
+    { label: "Samica", value: "SAMICA" },
   ];
 
   const animalStatuses: AnimalType[] = [
@@ -137,9 +140,9 @@ const AdminAnimalsPage = () => {
   ];
 
   const animalSizes: AnimalType[] = [
-    { label: "Mały", value: "mały" },
-    { label: "Średni", value: "średni" },
-    { label: "Duży", value: "duży" },
+    { label: "Mały", value: "MALY" },
+    { label: "Średni", value: "SREDNI" },
+    { label: "Duży", value: "DUZY" },
   ];
 
   const animalTraits: AnimalType[] = [
@@ -240,7 +243,7 @@ const AdminAnimalsPage = () => {
               Zarządzaj zwierzętami
             </h1>
             <p className="text-sm leading-6 font-medium md:text-base md:leading-7">
-              W tym panelu możesz edytować dane zwierząt w schronisku.
+              W tym panelu znajdują się wszystkie zwierzęta w schronisku.
             </p>
           </div>
           <DashboardNavbar />
@@ -299,7 +302,9 @@ const AdminAnimalsPage = () => {
               Resetuj filtry
             </Button>
 
-            <Button variant="success">Dodaj zwierzę</Button>
+            <Button variant="success">
+              <a href="/admin/zwierzeta/dodaj">Dodaj zwierzę</a>
+            </Button>
           </div>
 
           <Table>
@@ -342,7 +347,9 @@ const AdminAnimalsPage = () => {
                       {animal.status}
                     </span>
                   </TableCell>
-                  <TableCell>{animal.age}</TableCell>
+                  <TableCell>
+                    {animal.age == 0 ? "Mniej niż rok" : animal.age}
+                  </TableCell>
                   <TableCell>{animal.imageUrl.length} z 5</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -353,9 +360,7 @@ const AdminAnimalsPage = () => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuItem>
-                          <a
-                            href={`/admin/zwierzeta/${animal.type}/${animal.id}/edycja`}
-                          >
+                          <a href={`/admin/zwierzeta/${animal.id}/edycja`}>
                             Edytuj dane
                           </a>
                         </DropdownMenuItem>

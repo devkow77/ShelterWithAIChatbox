@@ -1,0 +1,383 @@
+"use client";
+
+import { toast } from "sonner";
+import { useNavigate } from "react-router";
+import { useEffect, useRef, useState } from "react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, Controller } from "react-hook-form";
+import { Button, Container, Input, Label } from "@/components/ui";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxChips,
+  ComboboxChipsInput,
+} from "@/components/ui/combobox";
+import axios from "axios";
+import { Plus, Trash } from "lucide-react";
+import { createClient } from "@supabase/supabase-js";
+
+export const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL!,
+  import.meta.env.VITE_SUPABASE_ANON_KEY!,
+);
+
+export const GenderEnum = z.enum(["MEZCZYZNA", "KOBIETA"]);
+
+export const RoleEnum = z.enum(["UZYTKOWNIK", "ADMINISTRATOR", "PRACOWNIK"]);
+
+export const userSchema = z.object({
+  fullName: z
+    .string()
+    .min(3, "Imię i nazwisko musi mieć minimum 3 znaki.")
+    .max(50, "Imię i nazwisko nie może mieć więcej niż 50 znaków."),
+
+  email: z.string().email("Niepoprawny adres email."),
+
+  password: z
+    .string()
+    .min(8, "Hasło musi mieć min. 8 znaków")
+    .regex(
+      /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
+      "Hasło musi zawierać min. 1 wielką literę, 1 cyfrę i 1 znak specjalny.",
+    ),
+
+  gender: GenderEnum,
+
+  role: RoleEnum,
+
+  imageUrl: z.string().nullable(),
+});
+
+type UserFormData = z.infer<typeof userSchema>;
+
+type SelectorProps = {
+  items: string[];
+  placeholder: string;
+  value: string;
+  onValueChange: (v: string) => void;
+};
+
+const GenericSelector = ({
+  items,
+  placeholder,
+  value,
+  onValueChange,
+}: SelectorProps) => (
+  <Combobox
+    items={items}
+    value={value}
+    onValueChange={(val) => {
+      if (val) onValueChange(val);
+    }}
+  >
+    <ComboboxChips>
+      <ComboboxChipsInput
+        placeholder={placeholder}
+        className="placeholder:text-muted-foreground py-1 text-sm lg:text-base"
+      />
+    </ComboboxChips>
+
+    <ComboboxContent>
+      <ComboboxEmpty>Brak dostępnych opcji</ComboboxEmpty>
+
+      <ComboboxList>
+        {items.map((item) => (
+          <ComboboxItem key={item} value={item}>
+            {item}
+          </ComboboxItem>
+        ))}
+      </ComboboxList>
+    </ComboboxContent>
+  </Combobox>
+);
+
+const AddWorkerPage = () => {
+  const navigate = useNavigate();
+
+  const userRoles = ["ADMINISTRATOR", "PRACOWNIK"];
+  const userGenders = ["KOBIETA", "MEZCZYZNA"];
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    setValue,
+    formState: { errors, isSubmitting },
+  } = useForm<UserFormData>({
+    resolver: zodResolver(userSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      password: "",
+      gender: "MEZCZYZNA",
+      role: "PRACOWNIK",
+      imageUrl: null,
+    },
+  });
+
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+  const existingImage = watch("imageUrl");
+
+  const previewImage = pendingFile
+    ? URL.createObjectURL(pendingFile)
+    : existingImage;
+
+  useEffect(() => {
+    if (!pendingFile) return;
+
+    const objectUrl = URL.createObjectURL(pendingFile);
+
+    return () => {
+      URL.revokeObjectURL(objectUrl);
+    };
+  }, [pendingFile]);
+
+  const onSubmit = async (data: UserFormData) => {
+    try {
+      let uploadedUrl: string | null = data.imageUrl;
+
+      if (pendingFile) {
+        const fileName = `${Date.now()}-${pendingFile.name}`;
+
+        const filePath = `users/${fileName}`;
+
+        const { error } = await supabase.storage
+          .from("users")
+          .upload(filePath, pendingFile);
+
+        if (error) {
+          throw error;
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from("users")
+          .getPublicUrl(filePath);
+
+        uploadedUrl = publicUrlData.publicUrl;
+      }
+
+      await axios.post(
+        "/api/users",
+        {
+          ...data,
+          imageUrl: uploadedUrl,
+        },
+        {
+          withCredentials: true,
+        },
+      );
+
+      toast.success("Nowy pracownik został utworzony!");
+
+      navigate("/admin/pracownicy");
+    } catch (err) {
+      console.error(err);
+
+      if (axios.isAxiosError(err)) {
+        toast.error(
+          err.response?.data?.msg || "Wystąpił błąd podczas zapisywania.",
+        );
+
+        return;
+      }
+
+      toast.error("Wystąpił błąd podczas zapisywania.");
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    if (pendingFile || existingImage) {
+      toast.error("Możesz dodać maksymalnie 1 zdjęcie.");
+
+      return;
+    }
+
+    setPendingFile(file);
+  };
+
+  const handleRemoveImage = () => {
+    setPendingFile(null);
+
+    setValue("imageUrl", null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  return (
+    <main>
+      <Container className="mb-6 space-y-12 md:mb-10 md:space-y-16">
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold text-green-900 md:text-5xl">
+            Dodaj pracownika
+          </h1>
+
+          <p className="text-sm leading-6 font-medium md:text-base md:leading-7">
+            Wprowadź wszystkie dane pracownika poniżej.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+          {/* ZDJĘCIE */}
+          <div className="space-y-6">
+            <Label>Zdjęcie (maksymalnie 1)</Label>
+
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200">
+                {previewImage ? (
+                  <>
+                    <span
+                      onClick={handleRemoveImage}
+                      className="absolute top-3 right-3 z-10 cursor-pointer rounded-full bg-white p-2"
+                    >
+                      <Trash className="text-red-600" />
+                    </span>
+
+                    <img
+                      src={previewImage}
+                      alt="user"
+                      className="absolute size-full object-cover"
+                    />
+                  </>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex size-full cursor-pointer items-center justify-center text-gray-400"
+                  >
+                    <Plus size={26} />
+                  </div>
+                )}
+              </div>
+
+              <input
+                type="file"
+                ref={fileInputRef}
+                accept="image/*"
+                hidden
+                onChange={handleFileUpload}
+              />
+            </div>
+          </div>
+
+          {/* FORMULARZ */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            {/* IMIĘ I NAZWISKO */}
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Imię i nazwisko</Label>
+
+              <Input
+                id="fullName"
+                {...register("fullName")}
+                placeholder="Podaj imię i nazwisko..."
+                className={errors.fullName ? "bg-red-600/20" : ""}
+              />
+
+              {errors.fullName && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.fullName.message}
+                </p>
+              )}
+            </div>
+
+            {/* EMAIL */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+
+              <Input
+                id="email"
+                {...register("email")}
+                placeholder="Podaj email..."
+                className={errors.email ? "bg-red-600/20" : ""}
+              />
+
+              {errors.email && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            {/* HASŁO */}
+            <div className="space-y-2">
+              <Label htmlFor="password">Hasło</Label>
+
+              <Input
+                id="password"
+                type="password"
+                {...register("password")}
+                placeholder="Podaj hasło..."
+                className={errors.password ? "bg-red-600/20" : ""}
+              />
+
+              {errors.password && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* PŁEĆ */}
+            <div className="space-y-2">
+              <Label>Płeć</Label>
+
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <GenericSelector
+                    items={userGenders}
+                    placeholder="Wybierz płeć"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+
+            {/* ROLA */}
+            <div className="space-y-2">
+              <Label>Rola</Label>
+
+              <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                  <GenericSelector
+                    items={userRoles}
+                    placeholder="Wybierz rolę"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            variant={"success"}
+            disabled={isSubmitting}
+            className="w-full lg:w-auto"
+          >
+            {isSubmitting ? "Dodawanie..." : "Dodaj nowego pracownika"}
+          </Button>
+        </form>
+      </Container>
+    </main>
+  );
+};
+
+export default AddWorkerPage;

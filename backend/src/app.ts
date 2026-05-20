@@ -5,6 +5,7 @@ import messageRoutes from './routes/messageRoutes';
 import userRoutes from './routes/userRoutes';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import { startAnimalStatusJob } from './jobs/animalStatus.job';
 
 const app = express();
 
@@ -25,6 +26,8 @@ app.use(cookieParser());
 app.use('/api/auth', authRoutes);
 app.use('/api/animals', animalRoutes);
 app.use('/api/contact', messageRoutes);
-app.use('/api/user', userRoutes);
+app.use('/api/users', userRoutes);
+
+startAnimalStatusJob();
 
 export default app;

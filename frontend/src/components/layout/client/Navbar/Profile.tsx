@@ -84,12 +84,6 @@ const Profile = () => {
               Zaloguj się
             </a>
           </DropdownMenuItem>
-          <DropdownMenuItem
-            className="cursor-pointer font-medium"
-            onClick={() => {}}
-          >
-            Zaloguj się przez Google
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-xs opacity-80">
             Nie masz konta?
