@@ -9,6 +9,7 @@ import ContactPage from "./contact";
 import TermsPage from "./terms";
 import PrivacyPage from "./privacy";
 import BlogPage from "./blog";
+import NotFoundPage from "./not-found";
 
 export {
   HomePage,
@@ -22,4 +23,5 @@ export {
   TermsPage,
   PrivacyPage,
   BlogPage,
+  NotFoundPage,
 };

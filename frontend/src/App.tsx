@@ -13,6 +13,7 @@ import {
   TermsPage,
   PrivacyPage,
   BlogPage,
+  NotFoundPage,
 } from "@/pages";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -92,6 +93,10 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
   // SCIEZKI UŻYTKOWNIKA //
   {
