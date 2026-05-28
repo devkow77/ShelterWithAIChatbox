@@ -10,6 +10,7 @@ import TermsPage from "./terms";
 import PrivacyPage from "./privacy";
 import BlogPage from "./blog";
 import NotFoundPage from "./not-found";
+import BlogPostPage from "./blog-post";
 
 export {
   HomePage,
@@ -24,4 +25,5 @@ export {
   PrivacyPage,
   BlogPage,
   NotFoundPage,
+  BlogPostPage,
 };

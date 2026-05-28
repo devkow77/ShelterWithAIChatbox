@@ -33,7 +33,7 @@ const adminOptions: AdminOptions[] = [
   },
   {
     icon: Pencil,
-    href: "/",
+    href: `${import.meta.env.VITE_STRIPE_CMS_ADMIN_URL}/admin`,
     name: "Zarządzaj blogiem",
   },
   {

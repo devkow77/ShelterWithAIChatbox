@@ -14,6 +14,7 @@ import {
   PrivacyPage,
   BlogPage,
   NotFoundPage,
+  BlogPostPage,
 } from "@/pages";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -83,6 +84,10 @@ const router = createBrowserRouter([
       {
         path: "/blog",
         element: <BlogPage />,
+      },
+      {
+        path: "/blog/:slug",
+        element: <BlogPostPage />,
       },
     ],
   },
