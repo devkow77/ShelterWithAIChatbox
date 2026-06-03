@@ -146,7 +146,7 @@ describe('GET /api/auth/info', () => {
     expect(res.body).toMatchObject({
       email: 'jan@example.com',
       fullName: 'Jan Kowalski',
-      role: 'USER',
+      role: 'UZYTKOWNIK',
     });
   });
 

@@ -1,0 +1,242 @@
+import { Container } from "@/components/ui";
+import { toast } from "sonner";
+import { useEffect, useState, useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui";
+import { MoreHorizontalIcon } from "lucide-react";
+import DashboardNavbar from "@/components/layout/admin/DashboardNavbar";
+import axios from "axios";
+import {
+  Combobox,
+  ComboboxContent,
+  ComboboxEmpty,
+  ComboboxItem,
+  ComboboxList,
+  ComboboxValue,
+  ComboboxChips,
+  ComboboxChipsInput,
+  ComboboxChip,
+} from "@/components/ui/combobox";
+import { styleAdoptionStatus } from "@/lib/utils";
+import { Label } from "@/components/ui";
+
+type AdoptionType = {
+  label: string;
+  value: string;
+};
+
+type Adoption = {
+  id: number;
+  userId: number;
+  animalId: number;
+  status: string;
+  message: string;
+  employeeNote: string;
+  createdAt: Date;
+  updatedAt: Date;
+
+  user: {
+    fullName: string;
+  };
+
+  animal: {
+    name: string;
+  };
+};
+
+type SelectorProps = {
+  items: AdoptionType[];
+  placeholder: string;
+  value: string[];
+  onValueChange: (v: string[]) => void;
+};
+
+const GenericSelector = ({
+  items,
+  placeholder,
+  value,
+  onValueChange,
+}: SelectorProps) => (
+  <Combobox items={items} multiple value={value} onValueChange={onValueChange}>
+    <ComboboxChips>
+      <ComboboxValue>
+        {value
+          .map((val) => items.find((i) => i.value === val)?.label)
+          .filter(Boolean)
+          .map((label) => (
+            <ComboboxChip key={label}>{label}</ComboboxChip>
+          ))}
+      </ComboboxValue>
+      <ComboboxChipsInput placeholder={placeholder} />
+    </ComboboxChips>
+    <ComboboxContent>
+      <ComboboxEmpty>Brak dostępnych opcji</ComboboxEmpty>
+      <ComboboxList>
+        {(item) => (
+          <ComboboxItem key={item.value} value={item.value}>
+            {item.label}
+          </ComboboxItem>
+        )}
+      </ComboboxList>
+    </ComboboxContent>
+  </Combobox>
+);
+
+const AdminAdoptionsPage = () => {
+  const [adoptions, setAdoptions] = useState<Adoption[]>([]);
+  const [selectedStatutes, setSelectedStatutes] = useState<string[]>([]);
+
+  const adoptionStatuses: AdoptionType[] = [
+    { label: "Oczekująca", value: "OCZEKUJACA" },
+    { label: "Zaakceptowana", value: "ZAAKCEPTOWANA" },
+    { label: "Odrzucona", value: "ODRZUCONA" },
+    { label: "Anulowana", value: "ANULOWANA" },
+  ];
+
+  useEffect(() => {
+    const fetchAdoptions = async () => {
+      try {
+        const res = await axios.get("/api/adoptions");
+        setAdoptions(res.data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchAdoptions();
+  }, []);
+
+  const filteredAdoptions = useMemo(() => {
+    return adoptions.filter((adoption) => {
+      const matchesStatus =
+        selectedStatutes.length === 0 ||
+        selectedStatutes.includes(adoption.status);
+
+      return matchesStatus;
+    });
+  }, [adoptions, selectedStatutes]);
+
+  const resetFilters = () => {
+    setSelectedStatutes([]);
+  };
+
+  const handleDeleteAdoption = async (id: number) => {
+    try {
+      await axios.delete(`/api/adoptions/${id}`);
+      setAdoptions((prev) => prev.filter((a) => a.id !== id));
+      toast.success("Pomyślnie usunięto wniosek o adopcję!");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  return (
+    <main>
+      <Container className="mb-6 space-y-12 md:mb-10 md:space-y-16">
+        <section id="info" className="space-y-6">
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold text-green-900 md:text-5xl">
+              Zarządzaj adopcjami
+            </h1>
+            <p className="text-sm leading-6 font-medium md:text-base md:leading-7">
+              W tym panelu znajdują się wszystkie adopcje użytkowników.
+            </p>
+          </div>
+          <DashboardNavbar />
+        </section>
+
+        <section id="table">
+          <div className="top-0 z-2 flex flex-wrap items-center gap-4 bg-white py-4 sm:sticky">
+            <div className="flex flex-row gap-x-2">
+              <Label>Wyszukaj po statusie</Label>
+              <GenericSelector
+                items={adoptionStatuses}
+                placeholder="Status"
+                value={selectedStatutes}
+                onValueChange={setSelectedStatutes}
+              />
+            </div>
+
+            <Button onClick={resetFilters} variant="destructive">
+              Resetuj filtry
+            </Button>
+          </div>
+
+          <Table>
+            <TableCaption>Lista adopcji w schronisku</TableCaption>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Użytkownik</TableHead>
+                <TableHead>Zwierzę</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Wiadomość użytkownika</TableHead>
+                <TableHead>Wiadomość pracownika</TableHead>
+                <TableHead className="text-right">Opcje</TableHead>
+              </TableRow>
+            </TableHeader>
+
+            <TableBody>
+              {filteredAdoptions.map((adoption) => (
+                <TableRow key={adoption.id}>
+                  <TableCell>{adoption.user.fullName}</TableCell>
+                  <TableCell>{adoption.animal.name}</TableCell>
+                  <TableCell>
+                    <span
+                      className={`${styleAdoptionStatus(adoption.status)} rounded-2xl p-2 text-xs`}
+                    >
+                      {adoption.status}
+                    </span>
+                  </TableCell>
+                  <TableCell>{adoption.message}</TableCell>
+                  <TableCell>{adoption.employeeNote}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="transparent" size="icon">
+                          <MoreHorizontalIcon />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem>
+                          <a href={`/pracownik/adopcje/${adoption.id}/edycja`}>
+                            Szczegóły
+                          </a>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+
+            <TableFooter>
+              <TableRow>
+                <TableCell colSpan={5}>Suma adopcji</TableCell>
+                <TableCell className="text-right">
+                  {filteredAdoptions.length}
+                </TableCell>
+              </TableRow>
+            </TableFooter>
+          </Table>
+        </section>
+      </Container>
+    </main>
+  );
+};
+
+export default AdminAdoptionsPage;

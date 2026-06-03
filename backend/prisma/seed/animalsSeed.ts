@@ -1,187 +1,170 @@
 import prisma from '../../src/prisma';
 import {
   AnimalGender,
+  AnimalHealthStatus,
   AnimalSize,
   AnimalStatus,
   AnimalType,
 } from '../../src/generated/prisma/enums';
+
+const yearsAgo = (years: number): Date => {
+  const date = new Date();
+  date.setFullYear(date.getFullYear() - years);
+  return date;
+};
 
 const animalsSeed = async () => {
   console.log('Seedowanie zwierząt...');
 
   await prisma.animal.deleteMany();
 
-  const traitsList = [
-    'energiczny',
-    'spokojny',
-    'przyjazny',
-    'nieśmiały',
-    'pieszczoch',
-    'skory do zabawy',
-    'łagodny',
-  ];
-
-  const locations = [
-    'Warszawa',
-    'Kraków',
-    'Rzeszów',
-    'Lublin',
-    'Poznań',
-    'Wrocław',
-    'Gdańsk',
-    'Katowice',
-    'Białystok',
-    'Szczecin',
-    'Tarnów',
-    'Przemyśl',
-    'Kielce',
-    'Zakopane',
-    'Olsztyn',
-  ];
-
-  const randomFrom = <T>(arr: T[]): T => {
-    if (arr.length === 0) {
-      throw new Error('Cannot pick from empty array');
-    }
-
-    const index = Math.floor(Math.random() * arr.length);
-    return arr[index]!;
-  };
-
-  const getRandomTraits = (): string => {
-    const shuffled = [...traitsList].sort(() => 0.5 - Math.random());
-    const count = Math.floor(Math.random() * 3) + 1;
-
-    return shuffled.slice(0, count).join(', ');
-  };
-
-  const getRandomAge = (): number => Math.floor(Math.random() * 15) + 1;
-
-  const getRandomLocation = (): string => {
-    return randomFrom(locations);
-  };
-
-  const getRandomFoundDate = (): Date => {
-    const random = Math.random();
-
-    if (random > 0.5) {
-      return new Date();
-    }
-
-    return new Date('2026-05-14T10:00:00');
-  };
-
-  const animalNames = {
-    PIES: [
-      'Felix',
-      'Burek',
-      'Reksio',
-      'Azor',
-      'Pimpek',
-      'Max',
-      'Rocky',
-      'Fido',
-      'Lassie',
-      'Rex',
-    ],
-    KOT: [
-      'Mruczek',
-      'Luna',
-      'Kitty',
-      'Simba',
-      'Kicia',
-      'Milo',
-      'Shadow',
-      'Bella',
-      'Cleo',
-      'Tiger',
-    ],
-    KROLIK: [
-      'Bunny',
-      'Fluffy',
-      'Puszek',
-      'Hopper',
-      'Snowball',
-      'Cotton',
-      'Thumper',
-      'Cinnabon',
-      'Binky',
-      'Uszatek',
-    ],
-    INNE: [
-      'Chomik',
-      'Papuga',
-      'Świnka',
-      'Fretka',
-      'Żółw',
-      'Myszka',
-      'Ryba',
-      'Kura',
-      'Koza',
-      'Alpaka',
-    ],
-  } as const;
-
-  const genderOptions: AnimalGender[] = [
-    AnimalGender.SAMICA,
-    AnimalGender.SAMIEC,
-  ];
-
-  const sizeOptions: AnimalSize[] = [
-    AnimalSize.MALY,
-    AnimalSize.SREDNI,
-    AnimalSize.DUZY,
-  ];
-
-  const getStatusByDate = (foundAt: Date): AnimalStatus => {
-    const now = new Date();
-
-    const diffInMs = now.getTime() - foundAt.getTime();
-    const MS_PER_DAY = 1000 * 60 * 60 * 24;
-    const diffInDays = Math.floor(diffInMs / MS_PER_DAY);
-
-    return diffInDays >= 7 ? AnimalStatus.SZUKA_DOMU : AnimalStatus.ZNALEZIONY;
-  };
-
-  const createAnimalData = (name: string, type: AnimalType) => {
-    const foundAt = getRandomFoundDate();
-
-    return {
-      name,
-      type,
-      gender: randomFrom(genderOptions),
-      size: randomFrom(sizeOptions),
-      status: getStatusByDate(foundAt),
-      traits: getRandomTraits(),
-      age: getRandomAge(),
-      description: `${name} szuka nowego, kochającego domu.`,
-      foundAt,
-      foundLocation: getRandomLocation(),
+  const animals = [
+    {
+      name: 'Burek',
+      type: AnimalType.PIES,
+      gender: AnimalGender.SAMIEC,
+      size: AnimalSize.DUZY,
+      status: AnimalStatus.SZUKA_DOMU,
+      healthStatus: AnimalHealthStatus.ZDROWY,
+      traits: 'energiczny, przyjazny',
+      dateOfBirth: yearsAgo(4),
+      description: 'Burek szuka nowego, kochającego domu.',
+      foundAt: new Date('2025-11-01'),
+      foundLocation: 'Rzeszów',
+      imageUrl: [] as string[],
+    },
+    {
+      name: 'Luna',
+      type: AnimalType.KOT,
+      gender: AnimalGender.SAMICA,
+      size: AnimalSize.MALY,
+      status: AnimalStatus.SZUKA_DOMU,
+      healthStatus: AnimalHealthStatus.ZDROWY,
+      traits: 'spokojny, pieszczoch',
+      dateOfBirth: yearsAgo(2),
+      description: 'Luna szuka nowego, kochającego domu.',
+      foundAt: new Date('2025-12-10'),
+      foundLocation: 'Kraków',
       imageUrl: [],
-    };
-  };
+    },
+    {
+      name: 'Puszek',
+      type: AnimalType.KROLIK,
+      gender: AnimalGender.SAMICA,
+      size: AnimalSize.MALY,
+      status: AnimalStatus.ZNALEZIONY,
+      healthStatus: AnimalHealthStatus.ZDROWY,
+      traits: 'łagodny, nieśmiały',
+      dateOfBirth: yearsAgo(1),
+      description: 'Puszek szuka nowego, kochającego domu.',
+      foundAt: new Date(),
+      foundLocation: 'Warszawa',
+      imageUrl: [],
+    },
+    {
+      name: 'Chomiczek',
+      type: AnimalType.CHOMIK,
+      gender: AnimalGender.SAMIEC,
+      size: AnimalSize.MALY,
+      status: AnimalStatus.ZNALEZIONY,
+      healthStatus: AnimalHealthStatus.ZDROWY,
+      traits: 'skory do zabawy',
+      dateOfBirth: yearsAgo(1),
+      description: 'Chomiczek szuka nowego, kochającego domu.',
+      foundAt: new Date(),
+      foundLocation: 'Lublin',
+      imageUrl: [],
+    },
+    {
+      name: 'Żółwik',
+      type: AnimalType.ZOLW,
+      gender: AnimalGender.SAMIEC,
+      size: AnimalSize.MALY,
+      status: AnimalStatus.SZUKA_DOMU,
+      healthStatus: AnimalHealthStatus.ZDROWY,
+      traits: 'spokojny',
+      dateOfBirth: yearsAgo(10),
+      description: 'Żółwik szuka nowego, kochającego domu.',
+      foundAt: new Date('2025-09-01'),
+      foundLocation: 'Poznań',
+      imageUrl: [],
+    },
+    {
+      name: 'Fretka',
+      type: AnimalType.INNE,
+      gender: AnimalGender.SAMICA,
+      size: AnimalSize.SREDNI,
+      status: AnimalStatus.SZUKA_DOMU,
+      healthStatus: AnimalHealthStatus.ZDROWY,
+      traits: 'energiczny',
+      dateOfBirth: yearsAgo(3),
+      description: 'Fretka szuka nowego, kochającego domu.',
+      foundAt: new Date('2025-10-15'),
+      foundLocation: 'Wrocław',
+      imageUrl: [],
+    },
+    {
+      name: 'Azor',
+      type: AnimalType.PIES,
+      gender: AnimalGender.SAMIEC,
+      size: AnimalSize.SREDNI,
+      status: AnimalStatus.W_TRAKCIE_ADOPCJI,
+      healthStatus: AnimalHealthStatus.CHORY,
+      traits: 'przyjazny',
+      dateOfBirth: yearsAgo(6),
+      description: 'Azor w trakcie adopcji — wymaga kontroli po leczeniu.',
+      foundAt: new Date('2025-06-01'),
+      foundLocation: 'Gdańsk',
+      nextVisitDate: new Date('2026-06-15'),
+      imageUrl: [],
+    },
+    {
+      name: 'Mruczek',
+      type: AnimalType.KOT,
+      gender: AnimalGender.SAMIEC,
+      size: AnimalSize.SREDNI,
+      status: AnimalStatus.ADOPTOWANY,
+      healthStatus: AnimalHealthStatus.ZDROWY,
+      traits: 'spokojny',
+      dateOfBirth: yearsAgo(5),
+      description: 'Mruczek został adoptowany.',
+      foundAt: new Date('2024-03-01'),
+      foundLocation: 'Katowice',
+      imageUrl: [],
+    },
+    {
+      name: 'Reksio',
+      type: AnimalType.PIES,
+      gender: AnimalGender.SAMIEC,
+      size: AnimalSize.DUZY,
+      status: AnimalStatus.SZUKA_DOMU,
+      healthStatus: AnimalHealthStatus.ZARAŻONY,
+      traits: 'energiczny',
+      dateOfBirth: yearsAgo(3),
+      description: 'Reksio wymaga izolacji i leczenia.',
+      foundAt: new Date('2025-08-01'),
+      foundLocation: 'Białystok',
+      nextVisitDate: new Date('2026-06-01'),
+      imageUrl: [],
+    },
+    {
+      name: 'Kicia',
+      type: AnimalType.KOT,
+      gender: AnimalGender.SAMICA,
+      size: AnimalSize.MALY,
+      status: AnimalStatus.SZUKA_DOMU,
+      healthStatus: AnimalHealthStatus.POTRZEBUJE_OPERACJI,
+      traits: 'nieśmiały, łagodny',
+      dateOfBirth: yearsAgo(2),
+      description: 'Kicia czeka na zaplanowaną operację.',
+      foundAt: new Date('2025-07-20'),
+      foundLocation: 'Szczecin',
+      nextVisitDate: new Date('2026-06-20'),
+      imageUrl: [],
+    },
+  ];
 
-  const animals: ReturnType<typeof createAnimalData>[] = [];
-
-  animalNames.PIES.forEach((name) => {
-    animals.push(createAnimalData(name, AnimalType.PIES));
-  });
-
-  animalNames.KOT.forEach((name) => {
-    animals.push(createAnimalData(name, AnimalType.KOT));
-  });
-
-  animalNames.KROLIK.forEach((name) => {
-    animals.push(createAnimalData(name, AnimalType.KROLIK));
-  });
-
-  animalNames.INNE.forEach((name) => {
-    animals.push(createAnimalData(name, AnimalType.INNE));
-  });
-
-  await prisma.animal.createMany({
-    data: animals,
-  });
+  await prisma.animal.createMany({ data: animals });
 
   console.log(`Seedowanie zakończone. Dodano ${animals.length} zwierząt.`);
 };

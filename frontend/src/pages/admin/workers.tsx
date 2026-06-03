@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontalIcon } from "lucide-react";
 import axios from "axios";
+import { Link } from "react-router";
 import { styleUserRole } from "@/lib/utils";
 import { toast } from "sonner";
 import { DeleteUserDialog } from "@/components/ui";
@@ -47,6 +48,9 @@ type Worker = {
   gender: string;
   email: string;
   role: string;
+  city: string;
+  hasChildren: boolean;
+  isFormFilled: boolean;
   twoFactorEnabled: boolean;
   imageUrl?: string;
   createdAt: string;
@@ -96,6 +100,11 @@ const AdminWorkersPage = () => {
   const [searchQuery, setSearchQuery] = useState<string>(""); // stan do przechowywania wartości wyszukiwania
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]); // stan do przechowywania wybranych typów pracowników
   const [selectedGender, setSelectedGender] = useState<string[]>([]); // stan do przechowywania wybranych płci
+  const [selectedCity, setSelectedCity] = useState<string[]>([]);
+  const [selectedHasChildren, setSelectedHasChildren] = useState<string[]>([]);
+  const [selectedIsFormFilled, setSelectedIsFormFilled] = useState<string[]>(
+    [],
+  );
 
   const workerRoles: WorkerType[] = [
     { label: "Administrator", value: "ADMINISTRATOR" },
@@ -106,6 +115,23 @@ const AdminWorkersPage = () => {
     { label: "Mężczyzna", value: "MEZCZYZNA" },
     { label: "Kobieta", value: "KOBIETA" },
   ];
+
+  const workerHasChildren: WorkerType[] = [
+    { label: "Tak", value: "true" },
+    { label: "Nie", value: "false" },
+  ];
+
+  const workerIsFormFilled: WorkerType[] = [
+    { label: "Tak", value: "true" },
+    { label: "Nie", value: "false" },
+  ];
+
+  const workerCities = useMemo(() => {
+    const cities = [
+      ...new Set(workers.map((w) => w.city).filter(Boolean)),
+    ] as string[];
+    return cities.map((city) => ({ label: city, value: city }));
+  }, [workers]);
 
   useEffect(() => {
     const fetchWorkers = async () => {
@@ -132,15 +158,29 @@ const AdminWorkersPage = () => {
       const matchesGender =
         selectedGender.length === 0 || selectedGender.includes(worker.gender);
 
-      return matchesSearch && matchesRoles && matchesGender;
+      const matchesCity =
+        selectedCity.length === 0 || selectedCity.includes(worker.city);
+
+      const matchesHasChildren =
+        selectedHasChildren.length === 0 ||
+        selectedHasChildren.includes(String(worker.hasChildren));
+
+      const matchesIsFormFilled =
+        selectedIsFormFilled.length === 0 ||
+        selectedIsFormFilled.includes(String(worker.isFormFilled));
+
+      return matchesSearch && matchesRoles && matchesGender && matchesCity && matchesHasChildren && matchesIsFormFilled;
     });
-  }, [workers, searchQuery, selectedRoles, selectedGender]);
+  }, [workers, searchQuery, selectedRoles, selectedGender, selectedCity, selectedHasChildren, selectedIsFormFilled]);
 
   // Funkcja do resetowania wszystkich filtrów
   const resetFilters = () => {
     setSelectedRoles([]);
     setSelectedGender([]);
     setSearchQuery("");
+    setSelectedCity([]);
+    setSelectedHasChildren([]);
+    setSelectedIsFormFilled([]);
   };
 
   const handleDeleteWorker = async (id: number) => {
@@ -193,6 +233,28 @@ const AdminWorkersPage = () => {
               onValueChange={setSelectedGender}
             />
 
+            <GenericSelector
+              items={workerCities}
+              placeholder="Miasto"
+              value={selectedCity}
+              onValueChange={setSelectedCity}
+            />
+
+            <GenericSelector
+              items={workerHasChildren}
+              placeholder="Czy ma dzieci"
+              value={selectedHasChildren}
+              onValueChange={setSelectedHasChildren}
+            />
+
+            <GenericSelector
+              items={workerIsFormFilled}
+              placeholder="Wypełniony formularz"
+              
+              value={selectedIsFormFilled}
+              onValueChange={setSelectedIsFormFilled}
+            />
+
             <Button onClick={resetFilters} variant="destructive">
               Resetuj filtry
             </Button>
@@ -209,6 +271,9 @@ const AdminWorkersPage = () => {
                 <TableHead>Imię i nazwisko</TableHead>
                 <TableHead>Rola</TableHead>
                 <TableHead>Płeć</TableHead>
+                <TableHead>Miejsce zamieszkania</TableHead>
+                <TableHead>Posiada dzieci</TableHead>
+                <TableHead>Wypełniony formularz</TableHead>
                 <TableHead>Pracuje od</TableHead>
                 <TableHead className="text-right">Opcje</TableHead>
               </TableRow>
@@ -238,6 +303,9 @@ const AdminWorkersPage = () => {
                     </span>
                   </TableCell>
                   <TableCell>{worker.gender}</TableCell>
+                  <TableCell>{worker.city ?? "—"}</TableCell>
+                  <TableCell>{worker.hasChildren ? "Tak" : "Nie"}</TableCell>
+                  <TableCell>{worker.isFormFilled ? "Tak" : "Nie"}</TableCell>
                   <TableCell>
                     {new Date(worker.createdAt).toLocaleDateString("pl-PL")} r.
                   </TableCell>
@@ -254,10 +322,13 @@ const AdminWorkersPage = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>
-                          <a href={`/admin/uzytkownicy/${worker.id}/edycja`}>
+                        <DropdownMenuItem asChild>
+                          <Link
+                            to={`/admin/uzytkownicy/${worker.id}/edycja`}
+                            state={{ returnTo: "/admin/pracownicy" }}
+                          >
                             Edytuj dane
-                          </a>
+                          </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DeleteUserDialog
@@ -272,8 +343,10 @@ const AdminWorkersPage = () => {
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={4}>Suma pracowników</TableCell>
-                <TableCell className="text-right">{workers.length}</TableCell>
+                <TableCell colSpan={7}>Suma pracowników</TableCell>
+                <TableCell className="text-right">
+                  {filteredWorkers.length}
+                </TableCell>
               </TableRow>
             </TableFooter>
           </Table>

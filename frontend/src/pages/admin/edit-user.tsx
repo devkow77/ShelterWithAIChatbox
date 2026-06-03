@@ -1,12 +1,13 @@
 "use client";
 
 import { toast } from "sonner";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { Button, Container, Input, Label } from "@/components/ui";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Combobox,
   ComboboxContent,
@@ -17,42 +18,107 @@ import {
   ComboboxChipsInput,
 } from "@/components/ui/combobox";
 import axios from "axios";
-import { Plus, Star, Trash } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
+import { Plus, Trash } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!,
-);
+const RoleEnum = z.enum(["UZYTKOWNIK", "ADMINISTRATOR", "PRACOWNIK"]);
+const GenderEnum = z.enum(["MEZCZYZNA", "KOBIETA"]);
+
+const userSchema = z.object({
+  fullName: z
+    .string()
+    .min(3, "Imię i nazwisko musi mieć minimum 3 znaki.")
+    .max(50, "Imię i nazwisko nie może mieć więcej niż 50 znaków."),
+  email: z
+    .string()
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Niepoprawny adres email."),
+  gender: GenderEnum,
+  role: RoleEnum,
+  phoneNumber: z.preprocess(
+    (val) => (val === "" || val == null ? null : val),
+    z
+      .string()
+      .trim()
+      .regex(/^\d{9}$/, "Numer telefonu musi składać się z 9 cyfr.")
+      .nullable()
+  ),
+  city: z.preprocess(
+    (val) => (val === "" || val == null ? null : val),
+    z
+      .string()
+      .trim()
+      .min(3, "Miasto musi mieć minimum 3 znaki.")
+      .max(50, "Miasto może mieć maksymalnie 50 znaków.")
+      .nullable()
+      .optional(),
+  ),
+  postalCode: z.preprocess(
+    (val) => (val === "" || val == null ? null : val),
+    z
+      .string()
+      .trim()
+      .regex(/^\d{2}-\d{3}$/, "Kod pocztowy musi mieć format XX-XXX.")
+      .nullable()
+      .optional(),
+  ),
+  street: z.preprocess(
+    (val) => (val === "" || val == null ? null : val),
+    z
+      .string()
+      .trim()
+      .min(3, "Adres musi mieć minimum 3 znaki.")
+      .max(100, "Adres może mieć maksymalnie 100 znaków.")
+      .nullable()
+      .optional(),
+  ),
+  dateOfBirth: z.preprocess(
+    (val) => {
+      if (val === "" || val == null) return null;
+      return val;
+    },
+    z.coerce
+      .date({ message: "Niepoprawna data urodzenia." })
+      .nullable()
+      .optional(),
+  ),
+  hasChildren: z.boolean(),
+  hasOtherAnimals: z.boolean(),
+  isBanned: z.boolean(),
+  adminNote: z
+    .string()
+    .max(500, "Notatka może mieć maksymalnie 500 znaków.")
+    .nullable()
+    .optional(),
+  imageUrl: z.string().nullable().optional(),
+});
+
+type UserFormData = z.infer<typeof userSchema>;
 
 type AppUser = {
   id: number;
   fullName: string;
   email: string;
-  role: string;
   gender: string;
-  imageUrl?: string;
+  role: string;
+  phoneNumber: string | null;
+  city: string | null;
+  postalCode: string | null;
+  street: string | null;
+  dateOfBirth: string | null;
+  hasChildren: boolean;
+  hasOtherAnimals: boolean;
+  isBanned: boolean;
+  adminNote: string | null;
+  imageUrl: string | null;
   twoFactorEnabled: boolean;
   createdAt: string;
 };
 
-export const userSchema = z.object({
-  fullName: z.string().min(1, "Imię jest wymagane"),
-  email: z
-    .string()
-    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Niepoprawny adres email."),
-  role: z.string().min(1, "Rola jest wymagana"),
-  gender: z.string().min(1, "Płeć jest wymagana"),
-  imageUrl: z.string().optional(),
-});
-
-type UserFormData = z.infer<typeof userSchema>;
-
 type SelectorProps = {
   items: string[];
   placeholder: string;
-  value: string | null;
-  onValueChange: (v: string | null) => void;
+  value: string;
+  onValueChange: (v: string) => void;
 };
 
 const GenericSelector = ({
@@ -61,7 +127,13 @@ const GenericSelector = ({
   value,
   onValueChange,
 }: SelectorProps) => (
-  <Combobox items={items} value={value} onValueChange={onValueChange}>
+  <Combobox
+    items={items}
+    value={value}
+    onValueChange={(val) => {
+      if (val) onValueChange(val);
+    }}
+  >
     <ComboboxChips>
       <ComboboxChipsInput
         placeholder={placeholder}
@@ -83,9 +155,24 @@ const GenericSelector = ({
   </Combobox>
 );
 
+const formatDateInput = (value: string | Date | null | undefined) => {
+  if (!value) return "";
+  return new Date(value).toISOString().split("T")[0];
+};
+
+const RETURN_PATHS = ["/admin/pracownicy", "/pracownik/uzytkownicy"] as const;
+type ReturnPath = (typeof RETURN_PATHS)[number];
+
 const EditUserPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const returnTo: ReturnPath =
+    RETURN_PATHS.find(
+      (path) =>
+        path === (location.state as { returnTo?: string } | null)?.returnTo,
+    ) ?? "/pracownik/uzytkownicy";
 
   const userRoles = ["ADMINISTRATOR", "PRACOWNIK", "UZYTKOWNIK"];
   const userGenders = ["MEZCZYZNA", "KOBIETA"];
@@ -98,13 +185,22 @@ const EditUserPage = () => {
     watch,
     setValue,
     formState: { isSubmitting, errors },
-  } = useForm<UserFormData>({
+  } = useForm({
     resolver: zodResolver(userSchema),
     defaultValues: {
       fullName: "",
       email: "",
-      role: "",
-      gender: "",
+      gender: "MEZCZYZNA",
+      role: "UZYTKOWNIK",
+      phoneNumber: "",
+      city: "",
+      postalCode: "",
+      street: "",
+      dateOfBirth: null,
+      hasChildren: false,
+      hasOtherAnimals: false,
+      isBanned: false,
+      adminNote: "",
       imageUrl: "",
     },
   });
@@ -123,19 +219,30 @@ const EditUserPage = () => {
 
   const previewImage = pendingFile
     ? URL.createObjectURL(pendingFile)
-    : existingImage;
+    : existingImage || null;
 
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await axios.get<AppUser>(`/api/users/${id}`);
+        const res = await axios.get<AppUser>(`/api/users/${id}`, {
+          withCredentials: true,
+        });
 
         reset({
           fullName: res.data.fullName,
           email: res.data.email,
-          role: res.data.role,
-          gender: res.data.gender,
-          imageUrl: res.data.imageUrl || "",
+          gender: res.data.gender as UserFormData["gender"],
+          role: res.data.role as UserFormData["role"],
+          phoneNumber: res.data.phoneNumber ?? "",
+          city: res.data.city ?? "",
+          postalCode: res.data.postalCode ?? "",
+          street: res.data.street ?? "",
+          dateOfBirth: formatDateInput(res.data.dateOfBirth) ?? null,
+          hasChildren: res.data.hasChildren,
+          hasOtherAnimals: res.data.hasOtherAnimals,
+          isBanned: res.data.isBanned,
+          adminNote: res.data.adminNote ?? "",
+          imageUrl: res.data.imageUrl ?? "",
         });
 
         setMeta({
@@ -143,13 +250,13 @@ const EditUserPage = () => {
           createdAt: res.data.createdAt,
         });
       } catch {
-        toast.error("Nie udało się pobrać danych pracownika.");
-        navigate("/admin/pracownicy");
+        toast.error("Nie udało się pobrać danych użytkownika.");
+        navigate(returnTo);
       }
     };
 
     if (id) fetchUser();
-  }, [id, reset, navigate]);
+  }, [id, reset, navigate, returnTo]);
 
   useEffect(() => {
     if (!pendingFile) return;
@@ -161,7 +268,7 @@ const EditUserPage = () => {
 
   const onSubmit = async (data: UserFormData) => {
     try {
-      let uploadedUrl = data.imageUrl || "";
+      let uploadedUrl: string | null = data.imageUrl || null;
 
       if (pendingFile) {
         const filePath = `${id}/${Date.now()}-${pendingFile.name}`;
@@ -190,24 +297,28 @@ const EditUserPage = () => {
         await supabase.storage.from("users").remove([path]);
       }
 
-      await axios.patch(`/api/users/${id}`, {
-        ...data,
-        imageUrl: uploadedUrl,
-      });
+      await axios.patch(
+        `/api/users/${id}`,
+        {
+          ...data,
+          imageUrl: uploadedUrl,
+        },
+        { withCredentials: true },
+      );
 
-      toast.success("Dane pracownika zostały zaktualizowane");
-      navigate("/admin/pracownicy");
+      toast.success("Dane użytkownika zostały zaktualizowane");
+      navigate(returnTo);
     } catch (err) {
       console.error(err);
 
       if (axios.isAxiosError(err)) {
-        const message =
-          err?.response?.data.msg || "Wystąpił błąd podczas zapisywania.";
-
-        toast(message);
+        toast.error(
+          err.response?.data?.msg || "Wystąpił błąd podczas zapisywania.",
+        );
+        return;
       }
 
-      toast("Wystąpił błąd podczas zapisywania.");
+      toast.error("Wystąpił błąd podczas zapisywania.");
     }
   };
 
@@ -223,6 +334,10 @@ const EditUserPage = () => {
     }
 
     setPendingFile(null);
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   return (
@@ -233,34 +348,30 @@ const EditUserPage = () => {
             Edytuj dane
           </h1>
           <p className="text-sm leading-6 font-medium md:text-base md:leading-7">
-            Wprowadź zmiany w profilu pracownika poniżej. Pamiętaj, aby zapisać
+            Wprowadź zmiany w profilu użytkownika poniżej. Pamiętaj, aby zapisać
             po zakończeniu edycji.
           </p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-6">
-            <Label htmlFor="name">Zdjęcie (maksymalnie 1)</Label>
+            <Label>Zdjęcie (maksymalnie 1)</Label>
 
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {/* ZDJĘCIE */}
               <div className="relative aspect-square overflow-hidden rounded-xl bg-gray-200">
                 {previewImage ? (
                   <>
                     <span
-                      onClick={() => handleRemoveImage()}
-                      className="absolute top-15 right-3 z-10 cursor-pointer rounded-full bg-white p-1 sm:p-2"
+                      onClick={handleRemoveImage}
+                      className="absolute top-3 right-3 z-10 cursor-pointer rounded-full bg-white p-1 sm:p-2"
                     >
                       <Trash className="text-red-600" />
                     </span>
 
-                    <span className="absolute top-3 right-3 z-10 cursor-pointer rounded-full bg-white/10 p-1 sm:p-2">
-                      <Star className="text-yellow-600" />
-                    </span>
-
-                    <div className="absolute z-2 size-full bg-linear-to-l from-black/40 to-transparent" />
-
                     <img
                       src={previewImage}
+                      alt="Zdjęcie użytkownika"
                       className="absolute size-full object-cover"
                     />
                   </>
@@ -274,9 +385,10 @@ const EditUserPage = () => {
                 )}
               </div>
 
+              {/* WERYFIKACJA 2FA & KONTO UTWORZONE */}
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Weryfikacja 2FA</Label>
+                  <Label>Weryfikacja 2FA</Label>
                   <p
                     className={
                       meta.twoFactorEnabled ? "text-green-600" : "text-red-600"
@@ -286,7 +398,7 @@ const EditUserPage = () => {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="name">Konto utworzone</Label>
+                  <Label>Konto utworzone</Label>
                   <p>
                     {meta.createdAt
                       ? new Date(meta.createdAt).toLocaleDateString("pl-PL")
@@ -306,72 +418,212 @@ const EditUserPage = () => {
             </div>
           </div>
 
-          <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
-            <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
-              <div className="space-y-2">
-                <Label>Imię i nazwisko</Label>
-                <Input
-                  {...register("fullName")}
-                  placeholder="Podaj imię i nazwisko..."
-                  className={errors.fullName ? "bg-red-600/20" : ""}
-                />
-                {errors.fullName && (
-                  <p className="text-xs font-medium text-red-600 lg:text-sm">
-                    {errors.fullName.message}
-                  </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* IMIĘ I NAZWISKO */}
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Imię i nazwisko</Label>
+              <Input
+                id="fullName"
+                {...register("fullName")}
+                placeholder="Podaj imię i nazwisko..."
+                className={errors.fullName ? "bg-red-600/20" : ""}
+              />
+              {errors.fullName && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.fullName.message}
+                </p>
+              )}
+            </div>
+
+            {/* EMAIL */}
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                {...register("email")}
+                placeholder="Podaj email..."
+                className={errors.email ? "bg-red-600/20" : ""}
+              />
+              {errors.email && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.email.message}
+                </p>
+              )}
+            </div>
+
+            {/* NUMER TELEFONU */}
+            <div className="space-y-2">
+              <Label htmlFor="phoneNumber">Numer telefonu</Label>
+              <Input
+                id="phoneNumber"
+                {...register("phoneNumber")}
+                placeholder="np. 500123456"
+                className={errors.phoneNumber ? "bg-red-600/20" : ""}
+              />
+              {errors.phoneNumber && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.phoneNumber.message}
+                </p>
+              )}
+            </div>
+
+            {/* ROLA */}
+            <div className="space-y-2">
+              <Label>Rola</Label>
+              <Controller
+                name="role"
+                control={control}
+                render={({ field }) => (
+                  <GenericSelector
+                    items={userRoles}
+                    placeholder="Wybierz rolę"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
                 )}
-              </div>
+              />
+              {errors.role && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.role.message}
+                </p>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  {...register("email")}
-                  placeholder="Podaj email..."
-                  className={errors.email ? "bg-red-600/20" : ""}
-                />
-                {errors.email && (
-                  <p className="text-xs font-medium text-red-600 lg:text-sm">
-                    {errors.email.message}
-                  </p>
+            {/* PŁEĆ */}
+            <div className="space-y-2">
+              <Label>Płeć</Label>
+              <Controller
+                name="gender"
+                control={control}
+                render={({ field }) => (
+                  <GenericSelector
+                    items={userGenders}
+                    placeholder="Wybierz płeć"
+                    value={field.value}
+                    onValueChange={field.onChange}
+                  />
                 )}
-              </div>
+              />
+              {errors.gender && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.gender.message}
+                </p>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <Label>Rola</Label>
-                <Controller
-                  name="role"
-                  control={control}
-                  render={({ field }) => (
-                    <GenericSelector
-                      items={userRoles}
-                      placeholder="Wybierz rolę"
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    />
-                  )}
-                />
-              </div>
+            {/* DATA URODZENIA */}
+            <div className="space-y-2">
+              <Label htmlFor="dateOfBirth">Data urodzenia</Label>
+              <Input
+                id="dateOfBirth"
+                type="date"
+                {...register("dateOfBirth")}
+                className={errors.dateOfBirth ? "bg-red-600/20" : ""}
+              />
+              {errors.dateOfBirth && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.dateOfBirth.message}
+                </p>
+              )}
+            </div>
 
-              <div className="space-y-2">
-                <Label>Płeć</Label>
-                <Controller
-                  name="gender"
-                  control={control}
-                  render={({ field }) => (
-                    <GenericSelector
-                      items={userGenders}
-                      placeholder="Wybierz płeć"
-                      value={field.value}
-                      onValueChange={field.onChange}
-                    />
-                  )}
+            {/* MIASTO */}
+            <div className="space-y-2">
+              <Label htmlFor="city">Miasto</Label>
+              <Input
+                id="city"
+                {...register("city")}
+                placeholder="Podaj miasto..."
+                className={errors.city ? "bg-red-600/20" : ""}
+              />
+              {errors.city && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.city.message}
+                </p>
+              )}
+            </div>
+
+            {/* KOD POCZTOWY */}
+            <div className="space-y-2">
+              <Label htmlFor="postalCode">Kod pocztowy</Label>
+              <Input
+                id="postalCode"
+                {...register("postalCode")}
+                placeholder="np. 00-001"
+                className={errors.postalCode ? "bg-red-600/20" : ""}
+              />
+              {errors.postalCode && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.postalCode.message}
+                </p>
+              )}
+            </div>
+
+            {/* ULICA I NUMER */}
+            <div className="space-y-2">
+              <Label htmlFor="street">Ulica i numer</Label>
+              <Input
+                id="street"
+                {...register("street")}
+                placeholder="Podaj adres..."
+                className={errors.street ? "bg-red-600/20" : ""}
+              />
+              {errors.street && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.street.message}
+                </p>
+              )}
+            </div>
+
+            {/* NOTATKA ADMINISTRATORA */}
+            <div className="space-y-2 sm:col-span-2 lg:col-span-3">
+              <Label htmlFor="adminNote">Notatka administratora</Label>
+              <Textarea
+                id="adminNote"
+                {...register("adminNote")}
+                placeholder="Opcjonalna notatka widoczna dla pracowników..."
+                className={`${errors.adminNote ? "bg-red-600/20" : ""} h-50 resize-none`}
+              />
+              {errors.adminNote && (
+                <p className="text-xs font-medium text-red-600 lg:text-sm">
+                  {errors.adminNote.message}
+                </p>
+              )}
+            </div>
+
+            {/* CZY MA DZIECI & INNE ZWIERZĘTA & CZY KONTO JEST ZABLOKOWANE */}
+            <div className="flex flex-col gap-3 sm:col-span-2 lg:col-span-3">
+              <Label className="flex cursor-pointer items-center gap-2 text-sm font-medium md:text-base">
+                <Input
+                  type="checkbox"
+                  {...register("hasChildren")}
+                  className="size-4 accent-green-600"
                 />
-              </div>
+                Posiada dzieci
+              </Label>
+
+              <Label className="flex cursor-pointer items-center gap-2 text-sm font-medium md:text-base">
+                <Input
+                  type="checkbox"
+                  {...register("hasOtherAnimals")}
+                  className="size-4 accent-green-600"
+                />
+                Posiada inne zwierzęta
+              </Label>
+
+              <Label className="flex cursor-pointer items-center gap-2 text-sm font-medium md:text-base">
+                <Input
+                  type="checkbox"
+                  {...register("isBanned")}
+                  className="size-4 accent-green-600"
+                />
+                Konto zablokowane
+              </Label>
             </div>
           </div>
 
           <Button type="submit" variant={"success"} disabled={isSubmitting}>
-            {isSubmitting ? "Zapisywanie..." : "Zaktualizuj dane pracownika"}
+            {isSubmitting ? "Zapisywanie..." : "Zaktualizuj dane użytkownika"}
           </Button>
         </form>
       </Container>

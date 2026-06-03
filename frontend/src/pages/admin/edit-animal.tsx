@@ -19,12 +19,7 @@ import {
 } from "@/components/ui/combobox";
 import axios from "axios";
 import { Plus, Star, Trash } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
-
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!,
-);
+import { supabase } from "@/lib/supabase";
 
 const TypeEnum = z.enum(["PIES", "KOT", "KROLIK", "CHOMIK", "ZOLW", "INNE"], {
   message: "Typ zwierzęcia jest wymagany.",
@@ -41,27 +36,43 @@ const StatusEnum = z.enum(
     message: "Status zwierzęcia jest wymagany.",
   },
 );
+const HealthStatusEnum = z.enum(["ZDROWY", "CHORY", "ZARAŻONY", "POTRZEBUJE_OPERACJI"], {
+  message: "Stan zdrowia jest wymagany.",
+});
 
-export const animalSchema = z.object({
+const animalSchema = z.object({
   name: z
     .string()
     .min(3, "Imię musi posiadać minimum 3 znaki.")
     .max(20, "Imię może maksymalnie posiadać 20 znaków."),
   type: TypeEnum,
   gender: GenderEnum,
-  status: StatusEnum,
-  age: z.coerce
-    .number()
-    .int()
-    .min(0, "Wiek nie może być ujemny.")
-    .max(25, "Maksymalny wiek to 25 lat."),
   size: SizeEnum,
   traits: z.string().min(3, "Cechy muszą posiadać minimum 3 znaki."),
+  dateOfBirth: z.preprocess(
+    (val) => {
+      if (val === "" || val == null) return undefined;
+      return val;
+    },
+    z.coerce.date({
+      message: "Data urodzenia jest wymagana.",
+    }),
+  ),
   description: z
     .string()
     .min(20, "Opis musi mieć co najmniej 20 znaków.")
     .max(200, "Opis może mieć maksymalnie 200 znaków."),
-  imageUrl: z.array(z.string()).max(5, "Możesz dodać maksymalnie 5 zdjęć."),
+  status: StatusEnum,
+  healthStatus: HealthStatusEnum,
+  nextVisitDate: z.preprocess(
+    (val) => {
+      if (val === "" || val == null) return undefined;
+      return val;
+    },
+    z.coerce.date({
+      message: "Data następnej wizyty jest wymagana.",
+    }),
+  ),
   foundAt: z.preprocess(
     (val) => {
       if (val === "" || val == null) return undefined;
@@ -75,6 +86,7 @@ export const animalSchema = z.object({
     .string()
     .min(3, "Miejsowość musi posiadać minimum 3 znaki.")
     .max(40, "Miejscowość może maksymalnie posiadać 40 znaków."),
+  imageUrl: z.array(z.string()).max(5, "Możesz dodać maksymalnie 5 zdjęć."),
 });
 
 type AnimalFormData = z.infer<typeof animalSchema>;
@@ -129,6 +141,7 @@ const EditAnimalPage = () => {
     "W_TRAKCIE_ADOPCJI",
     "ADOPTOWANY",
   ];
+  const animalHealthStatusList = ["ZDROWY", "CHORY", "ZARAŻONY", "POTRZEBUJE_OPERACJI"];
 
   const {
     register,
@@ -144,14 +157,16 @@ const EditAnimalPage = () => {
       name: "",
       type: "INNE",
       gender: "SAMIEC",
-      status: "SZUKA_DOMU",
-      age: 0,
       size: "SREDNI",
       traits: "",
+      dateOfBirth: new Date().toISOString().split("T")[0],
       description: "",
-      imageUrl: [],
+      status: "ZNALEZIONY",
+      healthStatus: "ZDROWY",
+      nextVisitDate: new Date().toISOString().split("T")[0],
       foundAt: new Date().toISOString().split("T")[0],
       foundLocation: "",
+      imageUrl: [],
     },
   });
 
@@ -181,16 +196,18 @@ const EditAnimalPage = () => {
           name: data.name,
           type: data.type as AnimalFormData["type"],
           gender: data.gender as AnimalFormData["gender"],
-          status: data.status as AnimalFormData["status"],
-          age: data.age,
           size: data.size as AnimalFormData["size"],
           traits: data.traits,
+          dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth).toISOString().split("T")[0] : "",
           description: data.description,
-          imageUrl: data.imageUrl || [],
+          status: data.status as AnimalFormData["status"],
+          healthStatus: data.healthStatus as AnimalFormData["healthStatus"],
+          nextVisitDate: data.nextVisitDate ? new Date(data.nextVisitDate).toISOString().split("T")[0] : "",
           foundAt: data.foundAt
             ? new Date(data.foundAt).toISOString().split("T")[0]
             : "",
           foundLocation: data.foundLocation,
+          imageUrl: data.imageUrl || [],
         });
       } catch (err) {
         console.error("Błąd podczas pobierania:", err);
@@ -398,7 +415,7 @@ const EditAnimalPage = () => {
             </div>
           </div>
           <div className="flex flex-col gap-4 lg:flex-row lg:gap-8">
-            <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
               {/* IMIĘ */}
               <div className="space-y-2">
                 <Label htmlFor="name">Imię</Label>
@@ -406,28 +423,11 @@ const EditAnimalPage = () => {
                   id="name"
                   {...register("name")}
                   placeholder="Podaj imię..."
+                  className={errors.name && "bg-red-600/20"}
                 />
                 {errors.name && (
                   <p className="text-xs font-medium text-red-600 lg:text-sm">
                     {errors.name.message}
-                  </p>
-                )}
-              </div>
-
-              {/* WIEK */}
-              <div className="space-y-2">
-                <Label htmlFor="age">Wiek (lata)</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  min={0}
-                  max={25}
-                  {...register("age")}
-                  placeholder="Podaj wiek..."
-                />
-                {errors.age && (
-                  <p className="text-xs font-medium text-red-600 lg:text-sm">
-                    {errors.age.message}
                   </p>
                 )}
               </div>
@@ -450,6 +450,23 @@ const EditAnimalPage = () => {
                 {errors.type && (
                   <p className="text-xs font-medium text-red-600 lg:text-sm">
                     {errors.type.message}
+                  </p>
+                )}
+              </div>
+
+              {/* DATA URODZENIA */}
+              <div className="space-y-2">
+                <Label htmlFor="dateOfBirth">Data urodzenia</Label>
+                <Input
+                  id="dateOfBirth"
+                  type="date"
+                  {...register("dateOfBirth")}
+                  placeholder="Podaj datę urodzenia..."
+                  className={errors.dateOfBirth && "bg-red-600/20"}
+                />
+                {errors.dateOfBirth && (
+                  <p className="text-xs font-medium text-red-600 lg:text-sm">
+                    {errors.dateOfBirth.message}
                   </p>
                 )}
               </div>
@@ -521,24 +538,52 @@ const EditAnimalPage = () => {
               </div>
 
               {/* CECHY */}
-              <div className="space-y-2 lg:col-span-2">
+              <div className="space-y-2">
                 <Label htmlFor="traits">
-                  Cechy po przecinku (np. łagodny, lękliwy)
+                  Cechy po przecinku
                 </Label>
                 <Input
                   id="traits"
                   {...register("traits")}
-                  placeholder="Wpisz cechy po przecinku..."
+                  placeholder="np. łagodny, lękliwy..."
+                  className={errors.traits && "bg-red-600/20"}
                 />
+                {errors.traits && (
+                  <p className="text-xs font-medium text-red-600 lg:text-sm">
+                    {errors.traits.message}
+                  </p>
+                )}
+              </div>
+
+               {/* GATUNEK */}
+               <div className="space-y-2">
+                <Label>Stan zdrowia</Label>
+                <Controller
+                  name="healthStatus"
+                  control={control}
+                  render={({ field }) => (
+                    <GenericSelector
+                      items={animalHealthStatusList}
+                      placeholder="Wybierz stan zdrowia"
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    />
+                  )}
+                />
+                {errors.healthStatus && (
+                  <p className="text-xs font-medium text-red-600 lg:text-sm">
+                    {errors.healthStatus.message}
+                  </p>
+                )}
               </div>
 
               {/* ZNALEZIONY (MIEJSCE) */}
-              <div className="space-y-2 lg:col-span-2">
+              <div className="space-y-2">
                 <Label htmlFor="foundLocation">Znaleziony w miejscowości</Label>
                 <Input
                   id="foundLocation"
                   {...register("foundLocation")}
-                  placeholder="Napisz miejscowość..."
+                  placeholder="Podaj miejscowość..."
                   className={errors.foundLocation && "bg-red-600/20"}
                 />
                 {errors.foundLocation && (
@@ -549,7 +594,7 @@ const EditAnimalPage = () => {
               </div>
 
               {/* ZNALEZIONY (DATA) */}
-              <div className="space-y-2 lg:col-span-2">
+              <div className="space-y-2">
                 <Label htmlFor="foundAt">Znaleziony w dniu</Label>
                 <Input
                   id="foundAt"
@@ -561,6 +606,21 @@ const EditAnimalPage = () => {
                 {errors.foundAt && (
                   <p className="text-xs font-medium text-red-600 lg:text-sm">
                     {errors.foundAt.message}
+                  </p>
+                )}
+              </div>
+
+              {/* NASTĘPNA WIZYTA */}
+              <div className="space-y-2">
+                <Label htmlFor="nextVisitDate">Następna wizyta</Label>
+                <Input
+                  id="nextVisitDate"
+                  type="date"
+                  {...register("nextVisitDate")}
+                />
+                {errors.nextVisitDate && (
+                  <p className="text-xs font-medium text-red-600 lg:text-sm">
+                    {errors.nextVisitDate.message}
                   </p>
                 )}
               </div>

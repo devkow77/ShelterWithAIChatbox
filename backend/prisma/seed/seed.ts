@@ -1,15 +1,18 @@
 import prisma from '../../src/prisma';
 import seedUsers from './usersSeed';
 import seedAnimals from './animalsSeed';
+import vetsSeed from './vetsSeed';
+import medicalRecordsSeed from './medicalRecordsSeed';
+import adoptionsSeed from './adoptionsSeed';
 
 async function main() {
   console.log('Start seedowania bazy...');
 
-  // Seed użytkowników
   await seedUsers();
-
-  // Seed zwierząt
   await seedAnimals();
+  await vetsSeed();
+  await medicalRecordsSeed();
+  await adoptionsSeed();
 
   console.log('Seedowanie zakończone');
 }

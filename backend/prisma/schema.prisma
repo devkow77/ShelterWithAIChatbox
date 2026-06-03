@@ -18,21 +18,38 @@ enum Role {
   ADMINISTRATOR
 }
 
+
+
 model User {
-  id               Int      @id @default(autoincrement())
-  fullName         String
-  email            String   @unique
-  password         String
-  gender           Gender   @default(MEZCZYZNA)
-  role             Role     @default(UZYTKOWNIK)
+  id               Int      @id @default(autoincrement()) // ID użytkownika
+  fullName         String   // Imię i nazwisko
+  email            String   @unique // Email
+  password         String   // Hasło
+  gender           Gender   @default(MEZCZYZNA) // Płeć
+  role             Role     @default(UZYTKOWNIK) // Rola
 
-  twoFactorEnabled Boolean @default(false)
-  twoFactorSecret  String?
+  phoneNumber      String? // Numer telefonu
+  city             String? // Miasto
+  postalCode       String? // Kod pocztowy
+  street           String? // Ulica
 
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  dateOfBirth      DateTime? // Data urodzenia
+  hasChildren      Boolean  @default(false) // Czy ma dzieci
+  hasOtherAnimals  Boolean  @default(false) // Czy ma inne zwierzęta
+  isBanned         Boolean  @default(false) // Czy konto jest zablokowane,  np. za złe zachowanie
+  isFormFilled     Boolean  @default(false) // Czy formularz został wypełniony, jezeli nie to nie mozna zgłosić adopcji, zwierzę moze być zgłoszone na stronie i oczekiwać na adopcję
 
-  imageUrl         String?
+  adminNote        String?  // Notatka dla pracowników schroniska
+
+  twoFactorEnabled Boolean @default(false) // Czy 2FA jest włączone
+  twoFactorSecret  String? // Secret 2FA
+
+  createdAt        DateTime @default(now()) // Data utworzenia
+  updatedAt        DateTime @updatedAt // Data aktualizacji
+
+  imageUrl         String? // URL zdjęcia
+  adoptions        Adoption[] // Adopcje
+  processedAdoptions Adoption[] @relation("processedBy") // Adopcje, które zostały przetworzone przez tego użytkownika
 }
 
 enum AnimalType {
@@ -62,19 +79,93 @@ enum AnimalStatus {
   ADOPTOWANY
 }
 
+enum AnimalHealthStatus {
+  ZDROWY
+  CHORY
+  ZARAŻONY
+  POTRZEBUJE_OPERACJI
+}
+
 model Animal {
-  id               Int           @id @default(autoincrement())
-  name             String
-  type             AnimalType    @default(INNE)
-  gender           AnimalGender  @default(SAMIEC)
-  size             AnimalSize    @default(SREDNI)
-  traits           String
-  age              Int   
-  description      String
+  id               Int           @id @default(autoincrement()) // ID zwierzęcia
+  name             String        // Imię
+  type             AnimalType    @default(INNE) // Typ
+  gender           AnimalGender  @default(SAMIEC) // Płeć
+  size             AnimalSize    @default(SREDNI)  // Rozmiar
+  traits           String        // Cechy
+  dateOfBirth      DateTime      // Data urodzenia
+  description      String        // Opis
 
-  status           AnimalStatus  @default(ZNALEZIONY)
-  foundAt          DateTime     
-  foundLocation    String      
+  status           AnimalStatus  @default(ZNALEZIONY) // Status
+  healthStatus     AnimalHealthStatus  @default(ZDROWY) // Stan zdrowia
+  nextVisitDate    DateTime?     // Data następnej wizyty
+  foundAt          DateTime      // Data znalezienia
+  foundLocation    String        // Miejsowość znalezienia
 
-  imageUrl         String[]
+  imageUrl         String[]      // URL zdjęć
+  adoptions        Adoption[]    // Adopcje
+  medicalRecords   MedicalRecord[] // Rekordy medyczne
+}
+
+enum AdoptionStatus {
+  OCZEKUJACA // Oczekująca
+  ZAAKCEPTOWANA // Zaakceptowana przez pracownika, mozliwosc przyjscia po odbiór zwierzęcia
+  ODRZUCONA // Odrzucona przez pracownika
+  ANULOWANA // Anulowana przez pracownika
+  ZAKONCZONA // Zakonczona przez pracownika, zwierzę zostało odebranie
+}
+
+model Adoption {
+  id          Int             @id @default(autoincrement()) // ID adopcji
+
+  userId      Int // ID użytkownika
+  animalId    Int // ID zwierzęcia
+
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade) // Użytkownik
+  animal      Animal          @relation(fields: [animalId], references: [id], onDelete: Cascade) // Zwierzę
+
+  status      AdoptionStatus  @default(OCZEKUJACA) // Status adopcji
+
+  message     String?         // Wiadomość od adoptującego
+  employeeNote String?        // Notatka pracownika schroniska
+
+  processedById Int? // ID pracownika, który przetworzył adopcję
+  processedBy User?            @relation(fields: [processedById], references: [id], name: "processedBy") // Pracownik, który przetworzył adopcję
+
+  createdAt   DateTime        @default(now()) // Data utworzenia
+  updatedAt   DateTime        @updatedAt // Data aktualizacji
+}
+
+model Vet {
+  id Int @id @default(autoincrement())
+  name String
+  phone String?
+  clinic String?
+  records MedicalRecord[]
+}
+
+enum MedicalRecordType {
+  WIZYTA // Wizyta kontrolna systematyczna
+  BADANIE // Badanie specjalistyczne
+  OPERACJA // Operacja chirurgiczna
+  SZCZEPIENIE // Szczepienie 
+  URAZ // Uraz w wyniku wypadku
+  INNE // Inne rekordy medyczne
+}
+
+model MedicalRecord {
+  id Int @id @default(autoincrement()) // ID rekordu medycznego
+  animalId Int 
+  description String // Opis rekordu medycznego
+  type MedicalRecordType // Typ rekordu medycznego
+
+  vetId Int // Weterynarz
+  vet Vet @relation(fields: [vetId], references: [id], onDelete: Cascade) // Weterynarz
+  date DateTime // Data rekordu medycznego
+  cost Float @default(0.00)// Koszt rekordu medycznego
+
+  animal Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt // Data aktualizacji
 }

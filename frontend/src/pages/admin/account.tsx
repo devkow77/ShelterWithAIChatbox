@@ -8,6 +8,7 @@ import { Button, Input, Label } from "@/components/ui";
 import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { styleUserRole } from "@/lib/utils";
 
 export const updatePasswordSchema = z
   .object({
@@ -82,9 +83,20 @@ const AdminAccountPage = () => {
               Poniżej znajdują się twoje podstawowe dane z konta.
             </p>
             <ul className="space-y-2 text-sm leading-6 md:text-base md:leading-7">
-              <li>Imię i nazwisko: {user?.fullName}</li>
-              <li>Email: {user?.email}</li>
-              <li>Typ konta: {user?.role}</li>
+              <li>
+                <span className="font-medium">Imię i nazwisko:</span>{" "}
+                {user?.fullName}
+              </li>
+              <li>
+                <span className="font-medium">Email:</span> {user?.email}
+              </li>
+              <li>
+                <span
+                  className={`${styleUserRole(user?.role as string)} rounded-sm p-2 px-4 font-medium`}
+                >
+                  {user?.role}
+                </span>
+              </li>
             </ul>
           </div>
         </section>

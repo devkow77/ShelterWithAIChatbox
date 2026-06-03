@@ -5,6 +5,7 @@ import AddAnimalPage from "./add-animal";
 import AdminWorkersPage from "./workers";
 import EditUserPage from "./edit-user";
 import AddUserPage from "./add-user";
+import AdminAdoptionsPage from "./adoptions";
 
 export {
   AdminAccountPage,
@@ -14,4 +15,5 @@ export {
   AdminWorkersPage,
   EditUserPage,
   AddUserPage,
+  AdminAdoptionsPage,
 };

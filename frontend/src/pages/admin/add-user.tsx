@@ -18,12 +18,7 @@ import {
 } from "@/components/ui/combobox";
 import axios from "axios";
 import { Plus, Trash } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
-
-export const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL!,
-  import.meta.env.VITE_SUPABASE_ANON_KEY!,
-);
+import { supabase } from "@/lib/supabase";
 
 export const GenderEnum = z.enum(["MEZCZYZNA", "KOBIETA"]);
 

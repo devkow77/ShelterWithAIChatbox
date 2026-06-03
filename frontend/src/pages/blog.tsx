@@ -71,7 +71,12 @@ const BlogPage = () => {
     return (
       <main>
         <Container>
-          <p>Brak postów.</p>
+          <section className="text-center">
+            <h1 className="font-bold">Brak postów</h1>
+            <p>
+              Przepraszamy, ale nie ma jeszcze żadnych postów do wyświetlenia.
+            </p>
+          </section>
         </Container>
       </main>
     );

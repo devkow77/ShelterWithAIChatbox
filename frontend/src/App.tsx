@@ -28,9 +28,10 @@ import {
   AdminWorkersPage,
   EditUserPage,
   AddUserPage,
+  AdminAdoptionsPage,
 } from "./pages/admin";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { WorkerUsersPage } from "./pages/worker";
+import { WorkerUsersPage, EditAdoptionPage } from "./pages/worker";
 
 const queryClient = new QueryClient();
 
@@ -154,6 +155,10 @@ const router = createBrowserRouter([
         path: "/admin/uzytkownicy/dodaj",
         element: <AddUserPage />,
       },
+      {
+        path: "/admin/adopcje",
+        element: <AdminAdoptionsPage />,
+      },
     ],
   },
   // SCIEZKI PRACOWNIKA I ADMINISTRATORA //
@@ -166,8 +171,12 @@ const router = createBrowserRouter([
     path: "/pracownik",
     children: [
       {
-        path: "uzytkownicy",
+        path: "/pracownik/uzytkownicy",
         element: <WorkerUsersPage />,
+      },
+      {
+        path: "/pracownik/adopcje/:id/edycja",
+        element: <EditAdoptionPage />,
       },
     ],
   },

@@ -38,7 +38,7 @@ const adminOptions: AdminOptions[] = [
   },
   {
     icon: File,
-    href: "/",
+    href: "/admin/adopcje",
     name: "Wnioski adopcyjne",
   },
   {
@@ -61,7 +61,7 @@ const DashboardNavbar = () => {
       {adminOptions.map((option, index: number) => (
         <a href={option.href} key={index}>
           <div
-            className={`${location.pathname == option.href ? "rounded-full bg-green-600 font-medium text-white" : "rounded-xl bg-gray-200 duration-300 hover:bg-white hover:shadow-lg"} relative grid aspect-square place-items-center overflow-hidden p-2 text-center`}
+            className={`${location.pathname == option.href ? "rounded-full bg-green-600 font-medium text-white" : "rounded-2xl bg-gray-200 duration-300 hover:bg-white hover:shadow-lg"} relative grid aspect-square place-items-center overflow-hidden p-2 text-center`}
           >
             <div>
               {option.icon && (

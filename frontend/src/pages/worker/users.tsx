@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontalIcon } from "lucide-react";
 import axios from "axios";
+import { Link } from "react-router";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { DeleteUserDialog } from "@/components/ui";
@@ -47,6 +48,9 @@ type User = {
   gender: string;
   email: string;
   role: string;
+  city?: string | null;
+  isBanned: boolean;
+  isFormFilled: boolean;
   twoFactorEnabled: boolean;
   imageUrl?: string;
   createdAt: string;
@@ -93,15 +97,38 @@ const GenericSelector = ({
 const WorkerUsersPage = () => {
   const [users, setUsers] = useState<User[]>([]);
 
-  const [searchQuery, setSearchQuery] = useState<string>(""); // stan do przechowywania wartości wyszukiwania
-  const [selectedGender, setSelectedGender] = useState<string[]>([]); // stan do przechowywania wybranych płci
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [selectedGender, setSelectedGender] = useState<string[]>([]);
+  const [selectedCity, setSelectedCity] = useState<string[]>([]);
+  const [selectedIsBanned, setSelectedIsBanned] = useState<string[]>([]);
+  const [selectedIsFormFilled, setSelectedIsFormFilled] = useState<string[]>(
+    [],
+  );
 
   const { user: loggedUser } = useAuth();
+  const isAdmin = loggedUser?.role === "ADMINISTRATOR";
 
   const userGenders: UserType[] = [
     { label: "Mężczyzna", value: "MEZCZYZNA" },
     { label: "Kobieta", value: "KOBIETA" },
   ];
+
+  const userIsBanned: UserType[] = [
+    { label: "Tak", value: "true" },
+    { label: "Nie", value: "false" },
+  ];
+
+  const userIsFormFilled: UserType[] = [
+    { label: "Tak", value: "true" },
+    { label: "Nie", value: "false" },
+  ];
+
+  const userCities = useMemo(() => {
+    const cities = [
+      ...new Set(users.map((u) => u.city).filter(Boolean)),
+    ] as string[];
+    return cities.map((city) => ({ label: city, value: city }));
+  }, [users]);
 
   useEffect(() => {
     const fetchWorkers = async () => {
@@ -125,13 +152,40 @@ const WorkerUsersPage = () => {
       const matchesGender =
         selectedGender.length === 0 || selectedGender.includes(user.gender);
 
-      return matchesSearch && matchesGender;
-    });
-  }, [users, searchQuery, selectedGender]);
+      const matchesCity =
+        selectedCity.length === 0 ||
+        (user.city != null && selectedCity.includes(user.city));
 
-  // Funkcja do resetowania wszystkich filtrów
+      const matchesIsBanned =
+        selectedIsBanned.length === 0 ||
+        selectedIsBanned.includes(String(user.isBanned));
+
+      const matchesIsFormFilled =
+        selectedIsFormFilled.length === 0 ||
+        selectedIsFormFilled.includes(String(user.isFormFilled));
+
+      return (
+        matchesSearch &&
+        matchesGender &&
+        matchesCity &&
+        matchesIsBanned &&
+        matchesIsFormFilled
+      );
+    });
+  }, [
+    users,
+    searchQuery,
+    selectedGender,
+    selectedCity,
+    selectedIsBanned,
+    selectedIsFormFilled,
+  ]);
+
   const resetFilters = () => {
     setSelectedGender([]);
+    setSelectedCity([]);
+    setSelectedIsBanned([]);
+    setSelectedIsFormFilled([]);
     setSearchQuery("");
   };
 
@@ -180,11 +234,32 @@ const WorkerUsersPage = () => {
               onValueChange={setSelectedGender}
             />
 
+            <GenericSelector
+              items={userCities}
+              placeholder="Miasto"
+              value={selectedCity}
+              onValueChange={setSelectedCity}
+            />
+
+            <GenericSelector
+              items={userIsBanned}
+              placeholder="Konto zablokowane"
+              value={selectedIsBanned}
+              onValueChange={setSelectedIsBanned}
+            />
+
+            <GenericSelector
+              items={userIsFormFilled}
+              placeholder="Wypełniony formularz"
+              value={selectedIsFormFilled}
+              onValueChange={setSelectedIsFormFilled}
+            />
+
             <Button onClick={resetFilters} variant="destructive">
               Resetuj filtry
             </Button>
 
-            {loggedUser?.role === "ADMINISTRATOR" ? (
+            {isAdmin ? (
               <Button variant="success">
                 <a href="/admin/uzytkownicy/dodaj">Dodaj użytkownika</a>
               </Button>
@@ -198,8 +273,13 @@ const WorkerUsersPage = () => {
                 <TableHead>Imię i nazwisko</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Płeć</TableHead>
+                <TableHead>Miejsce zamieszkania</TableHead>
+                <TableHead>Konto zablokowane</TableHead>
+                <TableHead>Wypełniony formularz</TableHead>
                 <TableHead>Zarejestrowany od</TableHead>
-                <TableHead className="text-right">Opcje</TableHead>
+                {isAdmin ? (
+                  <TableHead className="text-right">Opcje</TableHead>
+                ) : null}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -219,10 +299,13 @@ const WorkerUsersPage = () => {
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
                   <TableCell>{user.gender}</TableCell>
+                  <TableCell>{user.city ?? "—"}</TableCell>
+                  <TableCell>{user.isBanned ? "Tak" : "Nie"}</TableCell>
+                  <TableCell>{user.isFormFilled ? "Tak" : "Nie"}</TableCell>
                   <TableCell>
                     {new Date(user.createdAt).toLocaleDateString("pl-PL")} r.
                   </TableCell>
-                  {loggedUser?.role === "ADMINISTRATOR" ? (
+                  {isAdmin ? (
                     <TableCell className="text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -237,10 +320,13 @@ const WorkerUsersPage = () => {
                         </DropdownMenuTrigger>
 
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
-                            <a href={`/admin/uzytkownicy/${user.id}/edycja`}>
+                          <DropdownMenuItem asChild>
+                            <Link
+                              to={`/admin/uzytkownicy/${user.id}/edycja`}
+                              state={{ returnTo: "/pracownik/uzytkownicy" }}
+                            >
                               Edytuj dane
-                            </a>
+                            </Link>
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DeleteUserDialog
@@ -256,8 +342,12 @@ const WorkerUsersPage = () => {
             </TableBody>
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={4}>Suma użytkowników</TableCell>
-                <TableCell className="text-right">{users.length}</TableCell>
+                <TableCell colSpan={isAdmin ? 7 : 6}>
+                  Suma użytkowników
+                </TableCell>
+                <TableCell className="text-right">
+                  {filteredUsers.length}
+                </TableCell>
               </TableRow>
             </TableFooter>
           </Table>

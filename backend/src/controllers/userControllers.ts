@@ -168,6 +168,15 @@ export const updateUniqueUser = async (req: Request, res: Response) => {
   }
 
   try {
+    const today = new Date();
+    const dateOfBirth = parsedBody.data.dateOfBirth ? new Date(parsedBody.data.dateOfBirth) : null;
+
+    if (dateOfBirth && dateOfBirth.getTime() > today.getTime()) {
+      return res.status(StatusCodes.CONFLICT).json({
+        msg: 'Data urodzenia użytkownika jest nieprawidłowa!',
+      });
+    }
+
     const updatedUser = await prisma.user.update({
       where: { id: numericId },
       data: parsedBody.data,

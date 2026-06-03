@@ -82,11 +82,26 @@ export const updateUniqueAnimal = async (req: Request, res: Response) => {
     }
 
     const today = new Date();
+
     const foundAt = new Date(parsedBody.data.foundAt);
+    const nextVisitDate = new Date(parsedBody.data.nextVisitDate);
+    const dateOfBirth = new Date(parsedBody.data.dateOfBirth);
 
     if (foundAt.getTime() > today.getTime()) {
       return res.status(StatusCodes.CONFLICT).json({
         msg: 'Data znalezienia zwierzęcia jest nieprawidłowa!',
+      });
+    }
+
+    if (nextVisitDate.getTime() < today.getTime()) {
+      return res.status(StatusCodes.CONFLICT).json({
+        msg: 'Data następnej wizyty jest nieprawidłowa!',
+      });
+    }
+
+    if (dateOfBirth.getTime() > today.getTime()) {
+      return res.status(StatusCodes.CONFLICT).json({
+        msg: 'Data urodzenia zwierzęcia jest nieprawidłowa!',
       });
     }
 

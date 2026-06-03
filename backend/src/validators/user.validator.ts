@@ -36,9 +36,62 @@ export const updateUserSchema = z.object({
   email: z
     .string()
     .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Niepoprawny adres email.'),
-  role: RoleEnum,
   gender: GenderEnum,
-  imageUrl: z.string().nullable(),
+  role: RoleEnum,
+  phoneNumber: z.preprocess(
+    (val) => (val === "" || val == null ? null : val),
+    z
+      .string()
+      .trim()
+      .regex(/^\d{9}$/, "Numer telefonu musi składać się z 9 cyfr.")
+      .nullable()),
+  city: z.preprocess(
+    (val) => (val === "" || val == null ? null : val),
+    z
+      .string()
+      .trim()
+      .min(3, "Miasto musi mieć minimum 3 znaki.")
+      .max(50, "Miasto może mieć maksymalnie 50 znaków.")
+      .nullable()
+      .optional(),
+  ),
+  postalCode: z.preprocess(
+    (val) => (val === "" || val == null ? null : val),
+    z
+      .string()
+      .trim()
+      .regex(/^\d{2}-\d{3}$/, "Kod pocztowy musi mieć format XX-XXX.")
+      .nullable()
+      .optional(),
+  ),
+  street: z.preprocess(
+    (val) => (val === "" || val == null ? null : val),
+    z
+      .string()
+      .trim()
+      .min(3, "Adres musi mieć minimum 3 znaki.")
+      .max(100, "Adres może mieć maksymalnie 100 znaków.")
+      .nullable()
+      .optional(),
+  ),
+  dateOfBirth: z.preprocess(
+    (val) => {
+      if (val === "" || val == null) return null;
+      return val;
+    },
+    z.coerce
+      .date({ message: "Niepoprawna data urodzenia." })
+      .nullable()
+      .optional(),
+  ),
+  hasChildren: z.boolean().optional(),
+  hasOtherAnimals: z.boolean().optional(),
+  isBanned: z.boolean().optional(),
+  adminNote: z
+    .string()
+    .max(500, "Notatka może mieć maksymalnie 500 znaków.")
+    .optional(),
+  imageUrl: z.string().nullable().optional(),
 });
 
 // router.post('/', createUser);
@@ -50,14 +103,13 @@ export const createUserSchema = z.object({
   email: z
     .string()
     .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Niepoprawny adres email.'),
-  password: z
-    .string()
-    .min(8, 'Hasło musi mieć min. 8 znaków')
-    .regex(
-      /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
-      'Hasło musi zawierać min. 1 wielką literę, 1 cyfrę i 1 znak specjalny.',
-    ),
   gender: GenderEnum,
   role: RoleEnum,
-  imageUrl: z.string().nullable(),
+  password: z
+  .string()
+  .min(8, 'Hasło musi mieć min. 8 znaków')
+  .regex(
+    /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/,
+    'Hasło musi zawierać min. 1 wielką literę, 1 cyfrę i 1 znak specjalny.',
+  ),
 });

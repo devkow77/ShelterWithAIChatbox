@@ -34,7 +34,7 @@ import {
   ComboboxChip,
 } from "@/components/ui/combobox";
 import { Slider } from "@/components/ui/slider";
-import { styleAnimalStatus } from "@/lib/utils";
+import { styleAnimalHealthStatus, styleAnimalStatus } from "@/lib/utils";
 import { Label } from "@/components/ui";
 
 type AnimalType = {
@@ -49,8 +49,9 @@ type Animal = {
   gender: string;
   size: string;
   traits: string[];
-  age: number;
+  dateOfBirth: Date;
   status: string;
+  healthStatus: string;
   imageUrl: string[];
 };
 
@@ -114,6 +115,7 @@ const AdminAnimalsPage = () => {
   const [selectedAnimals, setSelectedAnimals] = useState<string[]>([]);
   const [selectedGender, setSelectedGender] = useState<string[]>([]);
   const [selectedStatutes, setSelectedStatutes] = useState<string[]>([]);
+  const [selectedHealthStatus, setSelectedHealthStatus] = useState<string[]>([]);
   const [selectedSize, setSelectedSize] = useState<string[]>([]);
   const [selectedTraits, setSelectedTraits] = useState<string[]>([]);
   const [ageRange, setAgeRange] = useState<[number, number]>([0, 25]);
@@ -155,6 +157,13 @@ const AdminAnimalsPage = () => {
     { label: "Łagodny", value: "łagodny" },
   ];
 
+  const animalHealthStatuses: AnimalType[] = [
+    { label: "Zdrowy", value: "ZDROWY" },
+    { label: "Chory", value: "CHORY" },
+    { label: "Zarażony", value: "ZARAŻONY" },
+    { label: "Potrzebuje operacji", value: "POTRZEBUJE_OPERACJI" },
+  ];
+
   useEffect(() => {
     const fetchAnimals = async () => {
       try {
@@ -167,6 +176,13 @@ const AdminAnimalsPage = () => {
 
     fetchAnimals();
   }, []);
+
+  const calculateAge = (dateOfBirth: string | Date) => {
+    const birthDate = new Date(dateOfBirth);
+    const today = new Date();
+ 
+    return today.getFullYear() - birthDate.getFullYear();
+  };
 
   const filteredAnimals = useMemo(() => {
     return animals.filter((animal) => {
@@ -184,6 +200,10 @@ const AdminAnimalsPage = () => {
         selectedStatutes.length === 0 ||
         selectedStatutes.includes(animal.status);
 
+      const matchesHealthStatus =
+        selectedHealthStatus.length === 0 ||
+        selectedHealthStatus.includes(animal.healthStatus);
+
       const matchesSize =
         selectedSize.length === 0 || selectedSize.includes(animal.size);
 
@@ -191,13 +211,15 @@ const AdminAnimalsPage = () => {
         selectedTraits.length === 0 ||
         selectedTraits.every((t) => animal.traits.includes(t));
 
-      const matchesAge = animal.age >= ageRange[0] && animal.age <= ageRange[1];
+      const animalAge = calculateAge(animal.dateOfBirth);
+      const matchesAge = animalAge >= ageRange[0] && animalAge <= ageRange[1];
 
       return (
         matchesSearch &&
         matchesType &&
         matchesGender &&
         matchesStatus &&
+        matchesHealthStatus &&
         matchesSize &&
         matchesTraits &&
         matchesAge
@@ -209,6 +231,7 @@ const AdminAnimalsPage = () => {
     selectedAnimals,
     selectedGender,
     selectedStatutes,
+    selectedHealthStatus,
     selectedSize,
     selectedTraits,
     ageRange,
@@ -218,6 +241,7 @@ const AdminAnimalsPage = () => {
     setSelectedAnimals([]);
     setSelectedGender([]);
     setSelectedStatutes([]);
+    setSelectedHealthStatus([]);
     setSelectedSize([]);
     setSelectedTraits([]);
     setAgeRange([0, 25]);
@@ -283,6 +307,13 @@ const AdminAnimalsPage = () => {
             />
 
             <GenericSelector
+              items={animalHealthStatuses}
+              placeholder="Stan zdrowia"
+              value={selectedHealthStatus}
+              onValueChange={setSelectedHealthStatus}
+            />
+
+            <GenericSelector
               items={animalSizes}
               placeholder="Rozmiar"
               value={selectedSize}
@@ -315,6 +346,7 @@ const AdminAnimalsPage = () => {
                 <TableHead>Gatunek</TableHead>
                 <TableHead>Płeć</TableHead>
                 <TableHead>Status adopcji</TableHead>
+                <TableHead>Stan zdrowia</TableHead>
                 <TableHead>Wiek (lat)</TableHead>
                 <TableHead>Ilość zdjęć</TableHead>
                 <TableHead className="text-right">Opcje</TableHead>
@@ -342,13 +374,22 @@ const AdminAnimalsPage = () => {
                     <span
                       className={`${styleAnimalStatus(
                         animal.status,
-                      )} rounded-2xl p-2 text-xs`}
+                      )} rounded-2xl px-4 py-2 text-xs`}
                     >
                       {animal.status}
                     </span>
                   </TableCell>
                   <TableCell>
-                    {animal.age == 0 ? "Mniej niż rok" : animal.age}
+                    <span
+                      className={`${styleAnimalHealthStatus(
+                        animal.healthStatus,
+                      )} rounded-2xl px-4 py-2 text-xs`}
+                    >
+                      {animal.healthStatus}
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    {calculateAge(animal.dateOfBirth) == 0 ? "Mniej niż rok" : calculateAge(animal.dateOfBirth)}
                   </TableCell>
                   <TableCell>{animal.imageUrl.length} z 5</TableCell>
                   <TableCell className="text-right">
@@ -378,7 +419,7 @@ const AdminAnimalsPage = () => {
 
             <TableFooter>
               <TableRow>
-                <TableCell colSpan={6}>Suma zwierząt</TableCell>
+                <TableCell colSpan={7}>Suma zwierząt</TableCell>
                 <TableCell className="text-right">
                   {filteredAnimals.length}
                 </TableCell>
