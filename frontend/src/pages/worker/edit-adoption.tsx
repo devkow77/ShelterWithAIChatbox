@@ -10,6 +10,20 @@ import { Textarea } from "@/components/ui/textarea";
 import axios from "axios";
 import { Ban, Check, X } from "lucide-react";
 import { toast } from "sonner";
+import {
+  styleAdoptionStatus,
+  calculateAge,
+  formatUserGender,
+  formatAnimalGender,
+  formatAdoptionStatus,
+  formatAnimalType,
+  formatAnimalHealthStatus,
+} from "@/lib/utils";
+import {
+  getAcceptanceTemplate,
+  getRejectionTemplate,
+  getCancellationTemplate,
+} from "@/lib/adoptionMessageTemplates";
 
 const adoptionSchema = z.object({
   message: z.string().optional(),
@@ -40,6 +54,8 @@ type AdoptionAnimal = {
   type: string;
   gender: string;
   dateOfBirth: string;
+  healthStatus: string;
+  traits: string;
   imageUrl: string[];
 };
 
@@ -47,32 +63,6 @@ type AdoptionDetails = {
   status: string;
   user: AdoptionUser;
   animal: AdoptionAnimal;
-};
-
-const ANIMAL_TYPE_LABELS: Record<string, string> = {
-  PIES: "Pies",
-  KOT: "Kot",
-  KROLIK: "Królik",
-  CHOMIK: "Chomik",
-  ZOLW: "Żółw",
-  INNE: "Inne",
-};
-
-const formatUserGender = (gender: string) =>
-  gender === "MEZCZYZNA" ? "Mężczyzna" : gender === "KOBIETA" ? "Kobieta" : gender;
-
-const formatAnimalGender = (gender: string) =>
-  gender === "SAMIEC" ? "Samiec" : gender === "SAMICA" ? "Samica" : gender;
-
-const calculateAge = (dateOfBirth: string | Date) => {
-  const birthDate = new Date(dateOfBirth);
-  const today = new Date();
-  const age = today.getFullYear() - birthDate.getFullYear();
-
-  if (age <= 0) return "Mniej niż rok";
-  if (age === 1) return "1 rok";
-  if (age >= 2 && age <= 4) return `${age} lata`;
-  return `${age} lat`;
 };
 
 const formatAddress = (user: AdoptionUser) => {
@@ -95,6 +85,8 @@ const EditAdoptionPage = () => {
     register,
     handleSubmit,
     reset,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<AdoptionFormData>({
     resolver: zodResolver(adoptionSchema),
@@ -103,6 +95,21 @@ const EditAdoptionPage = () => {
       employeeNote: "",
     },
   });
+
+  const employeeNote = watch("employeeNote");
+
+  const applyTemplate = (template: string) => {
+    if (employeeNote?.trim()) {
+      const confirmed = window.confirm(
+        "Pole odpowiedzi nie jest puste. Czy chcesz zastąpić obecną treść szablonem?",
+      );
+      if (!confirmed) return;
+    }
+    setValue("employeeNote", template, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
 
   useEffect(() => {
     const fetchAdoption = async () => {
@@ -132,12 +139,17 @@ const EditAdoptionPage = () => {
     if (id) fetchAdoption();
   }, [id, reset, navigate]);
 
-  const onSubmit = async (
-    data: AdoptionFormData,
-    action: "accept" | "reject" | "cancel",
-  ) => {
+  const onSubmit = async (data: AdoptionFormData, status: string) => {
+    const confirmed = window.confirm(
+      "Czy jesteś pewny, że chcesz zmienić status adopcji?",
+    );
+    if (!confirmed) return;
+
     try {
-      await axios.post(`/api/adoptions/${id}/${action}`, data);
+      await axios.patch(`/api/adoptions/${id}`, {
+        status,
+        ...data,
+      });
       toast.success("Wniosek został zaktualizowany.");
       navigate("/admin/adopcje");
     } catch (err) {
@@ -160,23 +172,31 @@ const EditAdoptionPage = () => {
     return null;
   }
 
-  const { user, animal } = adoption;
+  const { user, animal, status } = adoption;
 
   return (
     <main>
       <Container className="mb-6 space-y-12 md:mb-10 md:space-y-16">
         <div className="space-y-2">
+          <span
+            className={`inline-block h-fit rounded-sm px-4 py-2 text-sm font-medium ${styleAdoptionStatus(status)}`}
+          >
+            {formatAdoptionStatus[status] ?? status}
+          </span>
+
           <h1 className="text-3xl font-bold text-green-900 md:text-5xl">
             Informacje o adopcji
           </h1>
           <p className="text-sm leading-6 font-medium md:text-base md:leading-7">
-            Wprowadź zmiany w adopcji zwierzęcia poniżej.
+            {status === "OCZEKUJACA"
+              ? "Wprowadź zmiany w adopcji zwierzęcia poniżej."
+              : "Nie możesz edytować danych adopcji, ponieważ jest ona już zakończona."}
           </p>
         </div>
 
         <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
           <div className="space-y-4 lg:space-y-8">
-            <div className="grid grid-cols-2 items-start gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 items-start gap-6 sm:grid-cols-2 lg:gap-8">
               <div className="space-y-4">
                 <h2 className="font-semibold">Dane osoby wnioskującej</h2>
                 <div className="relative aspect-square w-40 rounded-full bg-black/20">
@@ -247,11 +267,21 @@ const EditAdoptionPage = () => {
                     </li>
                     <li>
                       <span className="font-medium">Typ:</span>{" "}
-                      {ANIMAL_TYPE_LABELS[animal.type] ?? animal.type}
+                      {formatAnimalType[animal.type] ?? animal.type}
                     </li>
                     <li>
                       <span className="font-medium">Płeć:</span>{" "}
                       {formatAnimalGender(animal.gender)}
+                    </li>
+                    <li>
+                      <span className="font-medium">Stan zdrowia:</span>{" "}
+                      {formatAnimalHealthStatus[animal.healthStatus] ??
+                        animal.healthStatus}
+                    </li>
+                    <li>
+                      {" "}
+                      <span className="font-medium">Cechy:</span>{" "}
+                      {animal.traits}
                     </li>
                   </ul>
                   <Button variant="success" asChild>
@@ -261,9 +291,7 @@ const EditAdoptionPage = () => {
                   </Button>
                 </div>
               </div>
-            </div>
 
-            <div className="flex gap-x-8">
               <div className="flex-1 space-y-2">
                 <Label htmlFor="message">Wiadomość wnioskującego</Label>
                 <Textarea
@@ -285,41 +313,85 @@ const EditAdoptionPage = () => {
                   {...register("employeeNote")}
                   placeholder="Dodaj odpowiedź dla wnioskującego (np. powód odrzucenia wniosku)"
                   className="h-50 resize-none lg:h-75"
+                  disabled={status !== "OCZEKUJACA"}
                 />
                 {errors.employeeNote && (
                   <p className="text-red-600">{errors.employeeNote.message}</p>
                 )}
               </div>
+
+              <div className="flex flex-wrap items-center gap-4">
+                <Button
+                  type="button"
+                  variant="success"
+                  disabled={isSubmitting || status !== "OCZEKUJACA"}
+                  onClick={handleSubmit((data) =>
+                    onSubmit(data, "ZAAKCEPTOWANA"),
+                  )}
+                >
+                  Akceptuj wniosek <Check />
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isSubmitting || status !== "OCZEKUJACA"}
+                  onClick={handleSubmit((data) => onSubmit(data, "ODRZUCONA"))}
+                >
+                  Odrzuć wniosek <X />
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="canceled"
+                  disabled={isSubmitting || status !== "OCZEKUJACA"}
+                  onClick={handleSubmit((data) => onSubmit(data, "ANULOWANA"))}
+                >
+                  Anuluj wniosek <Ban />
+                </Button>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4">
+                <Button
+                  type="button"
+                  variant="success"
+                  disabled={isSubmitting || status !== "OCZEKUJACA"}
+                  onClick={() =>
+                    applyTemplate(
+                      getAcceptanceTemplate(user.fullName, animal.name),
+                    )
+                  }
+                >
+                  Szablon akceptacji
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="destructive"
+                  disabled={isSubmitting || status !== "OCZEKUJACA"}
+                  onClick={() =>
+                    applyTemplate(
+                      getRejectionTemplate(user.fullName, animal.name),
+                    )
+                  }
+                >
+                  Szablon odrzucenia
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="canceled"
+                  disabled={isSubmitting || status !== "OCZEKUJACA"}
+                  onClick={() =>
+                    applyTemplate(
+                      getCancellationTemplate(user.fullName, animal.name),
+                    )
+                  }
+                >
+                  Szablon anulacji
+                </Button>
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center gap-x-4">
-            <Button
-              type="button"
-              variant="success"
-              disabled={isSubmitting}
-              onClick={handleSubmit((data) => onSubmit(data, "accept"))}
-            >
-              Akceptuj wniosek <Check />
-            </Button>
-
-            <Button
-              type="button"
-              variant="destructive"
-              disabled={isSubmitting}
-              onClick={handleSubmit((data) => onSubmit(data, "reject"))}
-            >
-              Odrzuć wniosek <X />
-            </Button>
-
-            <Button
-              type="button"
-              variant="canceled"
-              disabled={isSubmitting}
-              onClick={handleSubmit((data) => onSubmit(data, "cancel"))}
-            >
-              Anuluj wniosek <Ban />
-            </Button>
           </div>
         </form>
       </Container>

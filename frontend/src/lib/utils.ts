@@ -5,6 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// ANIMALS
 export const styleAnimalStatus = (status: string) => {
   let styles: string = "";
 
@@ -51,6 +52,26 @@ export const styleAnimalHealthStatus = (status: string) => {
   return styles;
 };
 
+export const formatAnimalGender = (gender: string) =>
+  gender === "SAMIEC" ? "Samiec" : gender === "SAMICA" ? "Samica" : gender;
+
+export const formatAnimalType: Record<string, string> = {
+  PIES: "Pies",
+  KOT: "Kot",
+  KROLIK: "Królik",
+  CHOMIK: "Chomik",
+  ZOLW: "Żółw",
+  INNE: "Inne",
+}
+
+export const formatAnimalHealthStatus: Record<string, string> = {
+  ZDROWY: "Zdrowy",
+  CHORY: "Chory",
+  ZARAŻONY: "Zarażony",
+  POTRZEBUJE_OPERACJI: "Potrzebuje operacji",
+}
+
+// USERS
 export const styleUserRole = (role: string) => {
   let styles: string = "";
 
@@ -71,6 +92,10 @@ export const styleUserRole = (role: string) => {
   return styles;
 };
 
+export const formatUserGender = (gender: string) =>
+  gender === "MEZCZYZNA" ? "Mężczyzna" : gender === "KOBIETA" ? "Kobieta" : gender;
+
+// ADOPTION
 export const styleAdoptionStatus = (status: string) => {
   let styles: string = "";
 
@@ -93,3 +118,25 @@ export const styleAdoptionStatus = (status: string) => {
 
   return styles;
 };
+
+export const formatAdoptionStatus: Record<string, string> = {
+  OCZEKUJACA: "Oczekująca",
+  ZAAKCEPTOWANA: "Zaakceptowana",
+  ODRZUCONA: "Odrzucona",
+  ANULOWANA: "Anulowana",
+  ZAKONCZONA: "Zakończona",
+}
+
+// GLOBAL
+export const calculateAge = (dateOfBirth: string | Date) => {
+  const birthDate = new Date(dateOfBirth);
+  const today = new Date();
+  const age = today.getFullYear() - birthDate.getFullYear();
+
+  if (age <= 0) return "Mniej niż rok";
+  if (age === 1) return "1 rok";
+  if (age >= 2 && age <= 4) return `${age} lata`;
+  return `${age} lat`;
+};
+
+

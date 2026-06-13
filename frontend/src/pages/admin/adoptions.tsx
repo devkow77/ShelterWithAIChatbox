@@ -1,5 +1,4 @@
 import { Container } from "@/components/ui";
-import { toast } from "sonner";
 import { useEffect, useState, useMemo } from "react";
 import {
   Table,
@@ -99,7 +98,9 @@ const GenericSelector = ({
 
 const AdminAdoptionsPage = () => {
   const [adoptions, setAdoptions] = useState<Adoption[]>([]);
-  const [selectedStatutes, setSelectedStatutes] = useState<string[]>([]);
+  const [selectedStatutes, setSelectedStatutes] = useState<string[]>([
+    "OCZEKUJACA",
+  ]);
 
   const adoptionStatuses: AdoptionType[] = [
     { label: "Oczekująca", value: "OCZEKUJACA" },
@@ -133,17 +134,6 @@ const AdminAdoptionsPage = () => {
 
   const resetFilters = () => {
     setSelectedStatutes([]);
-  };
-
-  const handleDeleteAdoption = async (id: number) => {
-  // wniosek musi byc najpierw odrzucony albo anulowany
-    try {
-      await axios.delete(`/api/adoptions/${id}`);
-      setAdoptions((prev) => prev.filter((a) => a.id !== id));
-      toast.success("Pomyślnie usunięto wniosek o adopcję!");
-    } catch (err) {
-      console.error(err);
-    }
   };
 
   return (
@@ -203,8 +193,10 @@ const AdminAdoptionsPage = () => {
                       {adoption.status}
                     </span>
                   </TableCell>
-                  <TableCell>{adoption.message}</TableCell>
-                  <TableCell>{adoption.employeeNote}</TableCell>
+                  <TableCell>{adoption.message?.slice(0, 30)}...</TableCell>
+                  <TableCell>
+                    {adoption.employeeNote?.slice(0, 30)}...
+                  </TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

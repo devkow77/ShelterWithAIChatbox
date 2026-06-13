@@ -1,6 +1,7 @@
 import { StatusCodes } from 'http-status-codes';
 import prisma from '../prisma';
 import { type Request, type Response } from 'express';
+import { editAdoptionStatusSchema } from '../validators/adoption.validator';
 
 // 1. Pobierz wszystkie adopcje
 export const getAdoptions = async (_req: Request, res: Response) => {
@@ -56,6 +57,56 @@ export const getAdoptionById = async (req: Request, res: Response) => {
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       msg: 'Wewnętrzny błąd serwera!',
+    });
+  }
+};
+
+// 3. Zmiana statusu adopcji
+export const changeAdoptionStatus = async (req: Request, res: Response) => {
+  const { id } = req.params;
+
+  const numericId = Number(id);
+
+  if (isNaN(numericId)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: 'Nieprawidłowe ID adopcji!',
+    });
+  }
+
+  const parsedBody = editAdoptionStatusSchema.safeParse(req.body);
+
+  if (!parsedBody.success) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      msg: 'Nieprawidłowy format danych!',
+    });
+  }
+
+  try {
+    const findAdoption = await prisma.adoption.findUnique({
+      where: {
+        id: numericId,
+      },
+    });
+
+    if (!findAdoption || findAdoption.status !== 'OCZEKUJACA') {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        msg: 'Adopcja nie istnieje lub nie jest w stanie OCZEKUJACA!',
+      });
+    }
+
+    await prisma.adoption.update({
+      where: {
+        id: numericId,
+      },
+      data: parsedBody.data,
+    });
+
+    return res.status(StatusCodes.OK).json({
+      msg: 'Adopcja została zaktualizowana!',
+    });
+  } catch (err) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      msg: 'Wewnętrzny błąd serwera podczas aktualizacji!',
     });
   }
 };
