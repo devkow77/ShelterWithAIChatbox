@@ -1,16 +1,17 @@
 import { Container } from "@/components/ui";
 import { useAuth } from "@/context/AuthContext";
 import { z } from "zod";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { toast } from "sonner";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button, Input, Label } from "@/components/ui";
 import { useNavigate } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useTotp } from "@/hooks/useTotp";
+import { DisableTotpForm, VerifyTotpForm } from "@/components/shared";
 
-export const updatePasswordSchema = z
+const updatePasswordSchema = z
   .object({
     currentPassword: z
       .string()
@@ -38,10 +39,7 @@ type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
 const AccountPage = () => {
   const { qrCode, manualKey } = useTotp();
   const { user, loading, logout } = useAuth();
-  const [showTotpSetup, setShowTotpSetup] = useState<boolean>(false);
   const navigate = useNavigate();
-
-  const enabled2FA = false; // tymczasowe
 
   const {
     handleSubmit,
@@ -59,8 +57,12 @@ const AccountPage = () => {
       toast.success(res.data.msg);
       await logout();
       navigate("/login");
-    } catch (err: any) {
-      toast.error(err.response.data.msg);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        toast.error(err.response?.data.msg);
+      } else {
+        toast.error("Wystąpił nieoczekiwany błąd");
+      }
     }
   };
 
@@ -102,9 +104,9 @@ const AccountPage = () => {
         </section>
         <section id="adoptions" className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
+            <h2 className="text-2xl font-bold text-green-900 md:text-4xl">
               Twoje aktualne adopcje
-            </h1>
+            </h2>
             <p className="text-sm leading-6 md:text-base md:leading-7">
               Poniżej znajduje się lista twoich dotychczasowych adopcji jak
               również obecne zgłoszenia w naszym schronisku.
@@ -139,9 +141,9 @@ const AccountPage = () => {
         </section>
         <section id="editPassword" className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
+            <h2 className="text-2xl font-bold text-green-900 md:text-4xl">
               Chcesz zmienić hasło?
-            </h1>
+            </h2>
             <p className="text-sm leading-6 md:text-base md:leading-7">
               Poniżej znajduje się formularz do zmiany dotychczasowego hasła.
             </p>
@@ -197,18 +199,18 @@ const AccountPage = () => {
         </section>
         <section id="2fa" className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
-              {enabled2FA
+            <h2 className="text-2xl font-bold text-green-900 md:text-4xl">
+              {user?.twoFactorEnabled
                 ? "Zarządzaj weryfikacją dwuetapową 2FA"
                 : "Włącz weryfikację dwuetapową 2FA"}
-            </h1>
+            </h2>
             <p className="text-sm leading-6 md:text-base md:leading-7">
-              {enabled2FA
+              {user?.twoFactorEnabled
                 ? "Kliknij przycisk poniżej aby wyłączyć weryfikację dwuetapową 2FA"
                 : "Kliknij przycisk poniżej aby włączyć weryfikację dwuetapową 2FA"}
             </p>
           </div>
-          {!enabled2FA && showTotpSetup && (
+          {!user?.twoFactorEnabled &&  (
             <div className="space-y-2">
               <p className="text-sm leading-6 md:text-base md:leading-7">
                 Zeskanuj poniższy kod QR w aplikacji Authenticator (np. Google
@@ -228,20 +230,10 @@ const AccountPage = () => {
               <p className="text-sm leading-6 font-semibold md:text-base md:leading-7">
                 Weryfikacja 2FA
               </p>
+              <VerifyTotpForm />
             </div>
           )}
-          <Button
-            variant={"success"}
-            onClick={
-              enabled2FA ? () => {} : () => setShowTotpSetup(!showTotpSetup)
-            }
-          >
-            {enabled2FA
-              ? "Wyłącz weryfikację 2FA"
-              : showTotpSetup
-                ? "Schowaj konfigurację 2FA"
-                : "Pokaż konfigurację 2FA"}
-          </Button>
+          {user?.twoFactorEnabled && <DisableTotpForm />}
         </section>
       </Container>
     </main>

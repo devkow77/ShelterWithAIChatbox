@@ -1,0 +1,118 @@
+import { Button, Input, Label } from "@/components/ui";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios, { AxiosError } from "axios";
+import { useNavigate } from "react-router";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+
+const loginSchema = z.object({
+  email: z
+    .string()
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Niepoprawny adres email."),
+
+  password: z.string().min(1, "Hasło jest wymagane."),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+interface LoginResponse {
+  requires2FA: boolean;
+  tempToken: string;
+  user: {
+    fullName: string;
+    email: string;
+    role: "UZYTKOWNIK" | "PRACOWNIK" | "ADMINISTRATOR";
+    twoFactorEnabled: boolean;
+  };
+}
+
+type LoginFormProps = {
+    on2FARequired: (tempToken: string) => void;
+};
+
+const LoginForm = ({ on2FARequired }: LoginFormProps) => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  const navigate = useNavigate();
+  const { setUser } = useAuth();
+
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      const res = await axios.post<LoginResponse>("/api/auth/login", data, {
+        withCredentials: true,
+      });
+      
+      if (res.data.requires2FA) {
+        on2FARequired(res.data.tempToken);
+        return;
+      }
+
+      setUser(res.data.user);
+      navigate("/"); 
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        toast.error(err.response?.data.msg);
+      } else {
+        toast.error("Wystąpił nieoczekiwany błąd");
+      }
+    }
+  };
+
+  return (
+          <form onSubmit={handleSubmit(onSubmit)}>
+            {/* Email */}
+            <Label>Email</Label>
+            <Input
+              {...register("email")}
+              className="mt-2 mb-4"
+              placeholder="Podaj swój email..."
+            />
+            {errors.email && (
+              <p className="-mt-2 mb-4 text-xs font-medium text-red-600 lg:text-sm">
+                {errors.email.message}
+              </p>
+            )}
+
+            {/* Password */}
+            <Label>Hasło</Label>
+            <Input
+              type="password"
+              {...register("password")}
+              className="mt-2 mb-4"
+              placeholder="Podaj swoje hasło..."
+            />
+            {errors.password && (
+              <p className="-mt-2 mb-4 text-xs font-medium text-red-600 lg:text-sm">
+                {errors.password.message}
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="cursor-pointer bg-green-600"
+              >
+                {isSubmitting ? "Logowanie..." : "Zaloguj się"}
+              </Button>
+
+              <p className="text-sm lg:text-base">
+                Nie masz konta?{" "}
+                <a href="/rejestracja" className="font-semibold">
+                  Zarejestruj się
+                </a>
+              </p>
+            </div>
+          </form>
+  );
+};
+
+export default LoginForm;

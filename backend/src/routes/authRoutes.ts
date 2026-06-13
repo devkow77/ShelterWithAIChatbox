@@ -5,6 +5,9 @@ import {
   authInfo,
   logout,
   generateTwoFactorQR,
+  disableTwoFactor,
+  verifyTwoFactorCode,
+  loginWithTotp,
 } from '../controllers/authControllers';
 import { authenticateUser } from '../middlewares/auth.middleware';
 
@@ -15,5 +18,8 @@ router.post('/login', loginToAccount);
 router.get('/info', authenticateUser, authInfo);
 router.post('/logout', authenticateUser, logout);
 router.get('/2fa/setup', authenticateUser, generateTwoFactorQR);
+router.post('/2fa/verify', authenticateUser, verifyTwoFactorCode);
+router.post('/2fa/disable', authenticateUser, disableTwoFactor);
+router.post('/2fa/login', loginWithTotp);
 
 export default router;

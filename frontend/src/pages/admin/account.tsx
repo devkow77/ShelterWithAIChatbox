@@ -5,12 +5,14 @@ import { useNavigate } from "react-router";
 import DashboardNavbar from "@/components/layout/admin/DashboardNavbar";
 import { z } from "zod";
 import { Button, Input, Label } from "@/components/ui";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { styleUserRole } from "@/lib/utils";
+import { useTotp } from "@/hooks/useTotp";
+import {VerifyTotpForm, DisableTotpForm} from "@/components/shared";
 
-export const updatePasswordSchema = z
+const updatePasswordSchema = z
   .object({
     currentPassword: z
       .string()
@@ -36,6 +38,7 @@ export const updatePasswordSchema = z
 type UpdatePasswordFormData = z.infer<typeof updatePasswordSchema>;
 
 const AdminAccountPage = () => {
+  const { qrCode, manualKey } = useTotp();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -55,8 +58,12 @@ const AdminAccountPage = () => {
       toast.success(res.data.msg);
       await logout();
       navigate("/login");
-    } catch (err: any) {
-      toast.error(err.response.data.msg);
+    } catch (err: unknown) {
+      if (err instanceof AxiosError) {
+        toast.error(err.response?.data.msg);
+      } else {
+        toast.error("Wystąpił nieoczekiwany błąd");
+      }
     }
   };
 
@@ -103,9 +110,9 @@ const AdminAccountPage = () => {
         <DashboardNavbar />
         <section id="editPassword" className="space-y-6 lg:space-y-8">
           <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-green-900 md:text-4xl">
+            <h2 className="text-2xl font-bold text-green-900 md:text-4xl">
               Chcesz zmienić hasło?
-            </h1>
+            </h2>
             <p className="text-sm leading-6 md:text-base md:leading-7">
               Poniżej znajduje się formularz do zmiany dotychczasowego hasła.
             </p>
@@ -158,6 +165,44 @@ const AdminAccountPage = () => {
               {isSubmitting ? "Aktualizacja..." : "Ustaw nowe hasło"}
             </Button>
           </form>
+        </section>
+        <section id="2fa" className="space-y-6 lg:space-y-8">
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-green-900 md:text-4xl">
+              {user?.twoFactorEnabled
+                ? "Zarządzaj weryfikacją dwuetapową 2FA"
+                : "Włącz weryfikację dwuetapową 2FA"}
+            </h2>
+            <p className="text-sm leading-6 md:text-base md:leading-7">
+              {user?.twoFactorEnabled
+                ? "Kliknij przycisk poniżej aby wyłączyć weryfikację dwuetapową 2FA"
+                : "Kliknij przycisk poniżej aby włączyć weryfikację dwuetapową 2FA"}
+            </p>
+          </div>
+          {!user?.twoFactorEnabled &&  (
+            <div className="space-y-2">
+              <p className="text-sm leading-6 md:text-base md:leading-7">
+                Zeskanuj poniższy kod QR w aplikacji Authenticator (np. Google
+                Authenticator lub Authy):
+              </p>
+              {qrCode && <img src={qrCode} alt="QR Code do TOTP" />}
+              <p className="text-sm leading-6 md:text-base md:leading-7">
+                Lub wpisz ręcznie klucz:
+              </p>
+              <div className="w-fit bg-black px-4 py-2 wrap-break-word text-white select-all">
+                {manualKey}
+              </div>
+              <p className="text-sm leading-6 md:text-base md:leading-7">
+                Po dodaniu konta w aplikacji Authenticator wprowadź wygenerowany
+                kod, aby zakończyć konfigurację 2FA.
+              </p>
+              <p className="text-sm leading-6 font-semibold md:text-base md:leading-7">
+                Weryfikacja 2FA
+              </p>
+              <VerifyTotpForm />
+            </div>
+          )}
+          {user?.twoFactorEnabled && <DisableTotpForm />}
         </section>
       </Container>
     </main>

@@ -136,6 +136,7 @@ const AdminAdoptionsPage = () => {
   };
 
   const handleDeleteAdoption = async (id: number) => {
+  // wniosek musi byc najpierw odrzucony albo anulowany
     try {
       await axios.delete(`/api/adoptions/${id}`);
       setAdoptions((prev) => prev.filter((a) => a.id !== id));

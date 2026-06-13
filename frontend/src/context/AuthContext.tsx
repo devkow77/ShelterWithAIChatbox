@@ -5,6 +5,7 @@ type User = {
   fullName: string;
   email: string;
   role: "UZYTKOWNIK" | "PRACOWNIK" | "ADMINISTRATOR";
+  twoFactorEnabled: boolean;
 };
 
 type AuthContextType = {

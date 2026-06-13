@@ -6,6 +6,7 @@ import {
   File,
   ChartColumn,
   SendHorizontal,
+  ClipboardPlus
 } from "lucide-react";
 import { useLocation } from "react-router";
 
@@ -40,6 +41,11 @@ const adminOptions: AdminOptions[] = [
     icon: File,
     href: "/admin/adopcje",
     name: "Wnioski adopcyjne",
+  },
+    {
+    icon: ClipboardPlus,
+    href: "/admin/raporty-medyczne",
+    name: "Raporty medyczne",
   },
   {
     icon: ChartColumn,

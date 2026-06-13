@@ -43,7 +43,7 @@ const faqData = [
   },
 ];
 
-const FaqList = () => {
+const ShortFaqList = () => {
   return (
     <Accordion type="single" collapsible className="w-full flex-1">
       {faqData.map((item, index) => (
@@ -56,4 +56,4 @@ const FaqList = () => {
   );
 };
 
-export default FaqList;
+export default ShortFaqList;

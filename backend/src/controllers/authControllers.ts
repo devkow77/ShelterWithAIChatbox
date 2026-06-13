@@ -7,8 +7,9 @@ import { generateToken } from '../utils/jwt';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
+import jwt from 'jsonwebtoken';
 
-// Rejestracja nowego konta użytkownika
+// 1. Rejestracja nowego konta użytkownika
 export const registerAccount = async (req: Request, res: Response) => {
   const parsedBody = registerSchema.safeParse(req.body);
 
@@ -49,7 +50,7 @@ export const registerAccount = async (req: Request, res: Response) => {
   }
 };
 
-// Logowanie do konta użytkownika
+// 2. Logowanie do konta użytkownika
 export const loginToAccount = async (req: Request, res: Response) => {
   const parsedBody = loginSchema.safeParse(req.body);
 
@@ -79,6 +80,13 @@ export const loginToAccount = async (req: Request, res: Response) => {
         .json({ msg: 'Niepoprawny email lub hasło!' });
     }
 
+    // Jeżeli użytkownik ma 2FA włączone
+    if (existingUser.twoFactorEnabled){
+      const tempToken = jwt.sign({userId: existingUser.id, twoFactorEnabled: true}, process.env.JWT_SECRET!, {expiresIn: '5m'});
+      return res.status(StatusCodes.OK).json({requires2FA: true, tempToken})
+    }
+
+    // Etap logowania bez 2FA
     const token = generateToken({
       userId: existingUser.id,
       userRole: existingUser.role,
@@ -111,6 +119,7 @@ export const loginToAccount = async (req: Request, res: Response) => {
   }
 };
 
+// 3. Pobieranie informacji o użytkowniku
 export const authInfo = async (req: AuthRequest, res: Response) => {
   const userId = req.userId;
 
@@ -127,6 +136,7 @@ export const authInfo = async (req: AuthRequest, res: Response) => {
         fullName: true,
         email: true,
         role: true,
+        twoFactorEnabled: true,
       },
     });
 
@@ -144,7 +154,7 @@ export const authInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
-// wylogowanie użytkownika (usuniecie tokenu)
+// 4. Wylogowanie użytkownika (usuniecie tokenu)
 export const logout = (req: Request, res: Response) => {
   res
     .clearCookie('token', {
@@ -157,7 +167,7 @@ export const logout = (req: Request, res: Response) => {
     .json({ msg: 'Pomyślnie wylogowano' });
 };
 
-// generowanie QR dla 2FA
+// 5. Generowanie QR dla 2FA
 export const generateTwoFactorQR = async (req: AuthRequest, res: Response) => {
   try {
     const user = await prisma.user.findUnique({
@@ -213,4 +223,122 @@ export const generateTwoFactorQR = async (req: AuthRequest, res: Response) => {
       .status(StatusCodes.INTERNAL_SERVER_ERROR)
       .json({ msg: 'Błąd serwera' });
   }
+};
+
+// 6. Werifikuj kod TOPT
+export const verifyTwoFactorCode = async (req: Request, res: Response) => {
+  const token = req.cookies.token;
+  const { code } = req.body;
+
+  if (!token) return res.status(StatusCodes.UNAUTHORIZED).json({ msg: 'Brak tokenu uwierzytelniającego' });
+
+  if (!code) return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'Kod TOTP jest wymagany' });
+
+  const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
+    userId: number;
+  };
+
+  const user = await prisma.user.findUnique({ where: { id: payload.userId } });
+  if (!user || !user.twoFactorSecret)
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: '2FA nie zostało zainicjalizowane' });
+
+  const verified = speakeasy.totp.verify({
+    secret: user.twoFactorSecret,
+    encoding: 'base32',
+    token: code,
+    window: 1,
+  });
+
+  if (!verified) return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'Nieprawidłowy kod TOTP' });
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { twoFactorEnabled: true },
+  });
+
+  res.status(StatusCodes.OK).json({ msg: 'Uwierzytelnianie dwuetapowe włączone, nastąpi wylogowanie z konta' });
+};
+
+// 7. Wyłącz 2FA
+export const disableTwoFactor = async (req: Request, res: Response) => {
+  const token = req.cookies.token;
+  if (!token) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({ msg: 'Brak tokenu' });
+  }
+
+  const payload = jwt.verify(token, process.env.JWT_SECRET!) as {
+    userId: number;
+  };
+
+  await prisma.user.update({
+    where: { id: payload.userId },
+    data: {
+      twoFactorSecret: null,
+      twoFactorEnabled: false,
+    },
+  });
+
+  res.status(200).json({ msg: '2FA zostało wyłączone' });
+};
+
+// 8. Logowanie użytkownika z 2FA
+export const loginWithTotp = async (req: Request, res: Response) => {
+  const { code, tempToken } = req.body;
+
+  if (!code || !tempToken) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'Brak danych' });
+  }
+
+  let payload;
+
+  try {
+    payload = jwt.verify(tempToken, process.env.JWT_SECRET!) as {
+      userId: number;
+      twoFactorEnabled: boolean;
+    };
+  } catch {
+    return res.status(StatusCodes.UNAUTHORIZED).json({ msg: 'Token wygasł' });
+  }
+
+  if (!payload.twoFactorEnabled) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({ msg: 'Nieprawidłowy token' });
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+  });
+
+  if (!user || !user.twoFactorSecret) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: '2FA nieaktywne' });
+  }
+
+  const verified = speakeasy.totp.verify({
+    secret: user.twoFactorSecret,
+    encoding: 'base32',
+    token: code,
+    window: 1,
+  });
+
+  if (!verified) {
+    return res.status(StatusCodes.BAD_REQUEST).json({ msg: 'Nieprawidłowy kod' });
+  }
+
+  const token = generateToken({ userId: user.id, userRole: user.role });
+
+  res.cookie('token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+    maxAge: 1000 * 60 * 60,
+  });
+
+  res.status(200).json({
+    user: {
+      id: user.id,
+      fullName: user.fullName,
+      email: user.email,
+      role: user.role,
+      twoFactorEnabled: user.twoFactorEnabled,
+    },
+  });
 };
