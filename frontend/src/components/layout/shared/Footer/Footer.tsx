@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button";
 import { FaFacebookSquare, FaInstagram, FaTiktok } from "react-icons/fa";
 import type { IconType } from "react-icons";
 import GoogleMaps from "./GoogleMaps";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import axios from "axios";
+import { toast } from "sonner";
 
 interface Link {
   name: string;
@@ -74,7 +79,43 @@ const informations: Link[] = [
   },
 ];
 
+const newsletterSchema = z.object({
+  email: z
+    .string()
+    .regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Niepoprawny adres email."),
+  consent: z.boolean().refine((val) => val === true, {
+    message: "Wymagana jest zgoda na otrzymywanie newslettera.",
+  }),
+});
+
+type NewsletterFormData = z.infer<typeof newsletterSchema>;
+
 const Footer = () => {
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<NewsletterFormData>({
+    resolver: zodResolver(newsletterSchema),
+    defaultValues: {
+      email: "",
+      consent: false,
+    },
+  });
+
+  const onSubmit = async (data: NewsletterFormData) => {
+    try {
+      const res = await axios.post("/api/newsletter/subscribe", data);
+      toast.success(res.data.msg);
+      reset();
+    } catch (err: any) {
+      toast.error(
+        err.response?.data?.msg ?? "Wystąpił błąd podczas zapisywania.",
+      );
+    }
+  };
+
   return (
     <footer className="mt-8 text-sm md:mt-16 md:text-base">
       <Container>
@@ -83,15 +124,54 @@ const Footer = () => {
         </h2>
         <GoogleMaps />
         <section className="my-12 flex flex-wrap items-center justify-between gap-4">
-          <h3 className="font-medium">
-            Zapisz się do <span className="font-bold">newslettera</span> i bądź
-            na bieżąco z naszymi działaniami!
-          </h3>
-          <form className="flex gap-4">
-            <Input type="email" placeholder="Email" />
-            <Button type="submit" variant={"success"}>
-              Subskrybuj
-            </Button>
+          <div className="space-y-2">
+            <h3 className="font-medium">
+              Zapisz się do <span className="font-bold">newslettera</span> i
+              bądź na bieżąco z naszymi działaniami!
+            </h3>
+            <p className="text-xs text-neutral-600 dark:text-neutral-400">
+              Otrzymasz informacje o zwierzętach szukających domu.
+            </p>
+          </div>
+          <form
+            onSubmit={handleSubmit(onSubmit)}
+            className="flex w-full max-w-xl flex-col gap-3 sm:w-auto"
+          >
+            <div className="flex gap-4">
+              <Input
+                type="email"
+                placeholder="Email"
+                {...register("email")}
+                className={errors.email ? "border-red-500" : ""}
+              />
+              <Button
+                type="submit"
+                variant={"success"}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? "Zapisywanie..." : "Subskrybuj"}
+              </Button>
+            </div>
+            <label className="flex items-start gap-2 text-xs">
+              <input
+                type="checkbox"
+                {...register("consent")}
+                className="mt-0.5"
+              />
+              <span>
+                Wyrażam zgodę na otrzymywanie informacji o zwierzętach
+                schroniska na podany adres email.{" "}
+                <a href="/polityka-prywatnosci" className="underline">
+                  Polityka prywatności
+                </a>
+              </span>
+            </label>
+            {errors.consent && (
+              <p className="text-xs text-red-600">{errors.consent.message}</p>
+            )}
+            {errors.email && (
+              <p className="text-xs text-red-600">{errors.email.message}</p>
+            )}
           </form>
         </section>
         <section className="border-t border-neutral-300 py-12 dark:border-neutral-700">

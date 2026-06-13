@@ -15,6 +15,7 @@ import {
   BlogPage,
   NotFoundPage,
   BlogPostPage,
+  NewsletterUnsubscribePage,
 } from "@/pages";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
@@ -89,6 +90,10 @@ const router = createBrowserRouter([
       {
         path: "/blog/:slug",
         element: <BlogPostPage />,
+      },
+      {
+        path: "/newsletter/wypisz/:token",
+        element: <NewsletterUnsubscribePage />,
       },
     ],
   },

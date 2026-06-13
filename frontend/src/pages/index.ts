@@ -11,6 +11,7 @@ import PrivacyPage from "./privacy";
 import BlogPage from "./blog";
 import NotFoundPage from "./not-found";
 import BlogPostPage from "./blog-post";
+import NewsletterUnsubscribePage from "./newsletter-unsubscribe";
 
 export {
   HomePage,
@@ -26,4 +27,5 @@ export {
   BlogPage,
   NotFoundPage,
   BlogPostPage,
+  NewsletterUnsubscribePage,
 };

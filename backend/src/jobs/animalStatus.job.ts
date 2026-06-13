@@ -1,6 +1,7 @@
 import cron from 'node-cron';
 import prisma from '../prisma';
 import { AnimalStatus } from '../generated/prisma/enums';
+import { triggerNewAnimalNotification } from '../services/emailService';
 
 export const startAnimalStatusJob = () => {
   cron.schedule(
@@ -11,23 +12,30 @@ export const startAnimalStatusJob = () => {
       try {
         const today = new Date();
 
-        // 7 dni = 7 * 24 * 60 * 60 * 1000
         const sevenDaysAgo = new Date(today);
         sevenDaysAgo.setDate(today.getDate() - 7);
 
-        const result = await prisma.animal.updateMany({
+        const animalsToUpdate = await prisma.animal.findMany({
           where: {
             status: AnimalStatus.ZNALEZIONY,
             foundAt: {
               lte: sevenDaysAgo,
             },
           },
-          data: {
-            status: AnimalStatus.SZUKA_DOMU,
-          },
         });
 
-        console.log(`Zaktualizowano ${result.count} zwierząt`);
+        for (const animal of animalsToUpdate) {
+          const updatedAnimal = await prisma.animal.update({
+            where: { id: animal.id },
+            data: {
+              status: AnimalStatus.SZUKA_DOMU,
+            },
+          });
+
+          triggerNewAnimalNotification(updatedAnimal);
+        }
+
+        console.log(`Zaktualizowano ${animalsToUpdate.length} zwierząt`);
       } catch (error) {
         console.error('Błąd aktualizacji statusów:', error);
       }

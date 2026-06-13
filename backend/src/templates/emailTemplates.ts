@@ -1,0 +1,284 @@
+const COLORS = {
+  green950: '#052e16',
+  green900: '#14532d',
+  green800: '#166534',
+  green700: '#15803d',
+  green600: '#16a34a',
+  green500: '#22c55e',
+  green100: '#dcfce7',
+  green50: '#f0fdf4',
+  white: '#ffffff',
+  gray600: '#4b5563',
+  gray500: '#6b7280',
+  gray400: '#9ca3af',
+  gray200: '#e5e7eb',
+};
+
+const escapeHtml = (text: string) =>
+  text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+export const EMAIL_LOGO_CID = 'logo@schronisko';
+export const EMAIL_ANIMAL_IMAGE_CID = 'animal@schronisko';
+
+const emailLayout = (
+  content: string,
+  preheader: string,
+  frontendUrl: string,
+) => `
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Schronisko</title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+</head>
+<body style="margin:0;padding:0;background-color:${COLORS.green50};font-family:'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <div style="display:none;max-height:0;overflow:hidden;opacity:0;">${escapeHtml(preheader)}</div>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.green50};padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:${COLORS.white};border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(20,83,45,0.08);">
+          <!-- Header -->
+          <tr>
+            <td style="background-color:${COLORS.green50};padding:28px 40px 24px;text-align:center;border-bottom:3px solid ${COLORS.green600};">
+              <a href="${frontendUrl}" target="_blank" style="text-decoration:none;display:inline-block;">
+                <img src="cid:${EMAIL_LOGO_CID}" alt="Schronisko" width="160" style="display:block;margin:0 auto;max-width:160px;width:100%;height:auto;border:0;" />
+              </a>
+            </td>
+          </tr>
+          <!-- Content -->
+          ${content}
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:${COLORS.green50};padding:24px 40px;border-top:1px solid ${COLORS.green100};">
+              <p style="margin:0 0 8px;font-size:13px;color:${COLORS.gray600};text-align:center;line-height:1.6;">
+                <strong style="color:${COLORS.green900};">Fundacja Schronisko</strong><br />
+                al. Tadeusza Rejtana 53, 35-326 Rzeszów
+              </p>
+              <p style="margin:0;font-size:12px;color:${COLORS.gray400};text-align:center;">
+                schronisko@gmail.com
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+const ctaButton = (href: string, label: string) => `
+<tr>
+  <td align="center" style="padding:0 40px 32px;">
+    <a href="${href}" target="_blank" style="display:inline-block;background-color:${COLORS.green600};color:${COLORS.white};font-size:15px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:10px;box-shadow:0 2px 8px rgba(22,163,74,0.35);">
+      ${escapeHtml(label)}
+    </a>
+  </td>
+</tr>`;
+
+const badge = (label: string) =>
+  `<span style="display:inline-block;background-color:${COLORS.green100};color:${COLORS.green800};font-size:12px;font-weight:600;padding:6px 12px;border-radius:20px;margin:0 6px 6px 0;">${escapeHtml(label)}</span>`;
+
+const unsubscribeFooter = (unsubscribeUrl: string) => `
+<tr>
+  <td style="padding:0 40px 28px;text-align:center;">
+    <p style="margin:0;font-size:12px;color:${COLORS.gray400};line-height:1.6;">
+      Otrzymujesz tę wiadomość, ponieważ zapisałeś się do newslettera Schroniska.<br />
+      <a href="${unsubscribeUrl}" style="color:${COLORS.green700};text-decoration:underline;">Wypisz się z newslettera</a>
+    </p>
+  </td>
+</tr>`;
+
+export const subscriptionConfirmationTemplate = (
+  unsubscribeUrl: string,
+  frontendUrl: string,
+) =>
+  emailLayout(
+    `
+<tr>
+  <td style="padding:40px 40px 24px;text-align:center;">
+    <div style="width:64px;height:64px;margin:0 auto 20px;background-color:${COLORS.green100};border-radius:50%;line-height:64px;font-size:28px;">✉️</div>
+    <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:${COLORS.green900};">Dziękujemy za zapis!</h2>
+    <p style="margin:0;font-size:15px;color:${COLORS.gray600};line-height:1.7;max-width:420px;margin-left:auto;margin-right:auto;">
+      Od teraz będziesz na bieżąco informowany o zwierzętach szukających domu w naszym schronisku.
+    </p>
+  </td>
+</tr>
+<tr>
+  <td style="padding:0 40px 24px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.green50};border-radius:12px;border:1px solid ${COLORS.green100};">
+      <tr>
+        <td style="padding:20px 24px;">
+          <p style="margin:0 0 12px;font-size:13px;font-weight:600;color:${COLORS.green800};text-transform:uppercase;letter-spacing:0.05em;">Co będziesz otrzymywać?</p>
+          <p style="margin:0;font-size:14px;color:${COLORS.gray600};line-height:1.8;">
+            🐕 Informacje o nowych podopiecznych gotowych do adopcji<br />
+            🏠 Aktualności ze schroniska<br />
+            ❤️ Historie zwierząt szukających domu
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+${ctaButton(`${frontendUrl}/zwierzeta`, 'Zobacz zwierzęta do adopcji')}
+${unsubscribeFooter(unsubscribeUrl)}
+`,
+    'Potwierdzenie zapisu do newslettera Schroniska',
+    frontendUrl,
+  );
+
+const SIZE_LABELS: Record<string, string> = {
+  MALY: 'Mały',
+  SREDNI: 'Średni',
+  DUZY: 'Duży',
+};
+
+export const newAnimalTemplate = (params: {
+  animalName: string;
+  typeLabel: string;
+  genderLabel: string;
+  sizeLabel: string;
+  description: string;
+  animalImageCid?: string;
+  animalsUrl: string;
+  unsubscribeUrl: string;
+  frontendUrl: string;
+}) => {
+  const {
+    animalName,
+    typeLabel,
+    genderLabel,
+    sizeLabel,
+    description,
+    animalImageCid,
+    animalsUrl,
+    unsubscribeUrl,
+    frontendUrl,
+  } = params;
+
+  const imageBlock = animalImageCid
+    ? `
+<tr>
+  <td style="padding:16px 32px 0;">
+    <img src="cid:${animalImageCid}" alt="${escapeHtml(animalName)}" width="536" style="display:block;width:100%;max-width:536px;height:auto;max-height:320px;object-fit:cover;border-radius:12px;margin:0 auto;border:2px solid ${COLORS.green100};" />
+  </td>
+</tr>`
+    : `
+<tr>
+  <td style="padding:32px 40px 0;text-align:center;">
+    <div style="background:linear-gradient(180deg,${COLORS.green100} 0%,${COLORS.green50} 100%);border-radius:12px;padding:48px 24px;">
+      <span style="font-size:64px;line-height:1;">🐾</span>
+    </div>
+  </td>
+</tr>`;
+
+  return emailLayout(
+    `
+<tr>
+  <td style="padding:28px 40px 8px;text-align:center;">
+    <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:${COLORS.green600};text-transform:uppercase;letter-spacing:0.08em;">Nowe zwierzę szuka domu</p>
+    <h2 style="margin:0;font-size:28px;font-weight:700;color:${COLORS.green900};letter-spacing:-0.02em;">${escapeHtml(animalName)}</h2>
+  </td>
+</tr>
+${imageBlock}
+<tr>
+  <td style="padding:24px 40px 8px;">
+    <div style="text-align:center;line-height:1;">
+      ${badge(typeLabel)}
+      ${badge(genderLabel)}
+      ${badge(sizeLabel)}
+    </div>
+  </td>
+</tr>
+<tr>
+  <td style="padding:16px 40px 8px;">
+    <p style="margin:0;font-size:15px;color:${COLORS.gray600};line-height:1.75;text-align:center;">
+      ${escapeHtml(description)}
+    </p>
+  </td>
+</tr>
+<tr>
+  <td style="padding:8px 40px 8px;text-align:center;">
+    <p style="margin:0;font-size:14px;color:${COLORS.green800};font-weight:500;">
+      Może to właśnie Twoje przyszłe zwierzę? 💚
+    </p>
+  </td>
+</tr>
+${ctaButton(animalsUrl, 'Poznaj bliżej i adoptuj')}
+${unsubscribeFooter(unsubscribeUrl)}
+`,
+    `${animalName} szuka domu — zobacz profil w Schronisku`,
+    frontendUrl,
+  );
+};
+
+export const subscriptionConfirmationText = (unsubscribeUrl: string) =>
+  `Dziękujemy za zapis do newslettera Schroniska!\n\nBędziesz otrzymywać informacje o zwierzętach szukających domu.\n\nWypisz się: ${unsubscribeUrl}`;
+
+export const unsubscribeConfirmationTemplate = (frontendUrl: string) =>
+  emailLayout(
+    `
+<tr>
+  <td style="padding:40px 40px 24px;text-align:center;">
+    <div style="width:64px;height:64px;margin:0 auto 20px;background-color:${COLORS.green100};border-radius:50%;line-height:64px;font-size:28px;">💚</div>
+    <h2 style="margin:0 0 12px;font-size:22px;font-weight:700;color:${COLORS.green900};">Przykro nam, że odchodzisz</h2>
+    <p style="margin:0;font-size:15px;color:${COLORS.gray600};line-height:1.7;max-width:420px;margin-left:auto;margin-right:auto;">
+      Potwierdzamy wypisanie z newslettera Schroniska. Nie będziesz już otrzymywać informacji o zwierzętach szukających domu.
+    </p>
+  </td>
+</tr>
+<tr>
+  <td style="padding:0 40px 24px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:${COLORS.green50};border-radius:12px;border:1px solid ${COLORS.green100};">
+      <tr>
+        <td style="padding:20px 24px;text-align:center;">
+          <p style="margin:0;font-size:14px;color:${COLORS.gray600};line-height:1.8;">
+            Dziękujemy za dotychczasowe wsparcie i zainteresowanie naszymi podopiecznymi.<br />
+            Mamy nadzieję, że jeszcze do nas wrócisz!
+          </p>
+        </td>
+      </tr>
+    </table>
+  </td>
+</tr>
+${ctaButton(`${frontendUrl}/zwierzeta`, 'Zobacz zwierzęta do adopcji')}
+<tr>
+  <td style="padding:0 40px 32px;text-align:center;">
+    <p style="margin:0;font-size:13px;color:${COLORS.gray500};line-height:1.6;">
+      Chcesz ponownie otrzymywać aktualności?<br />
+      <a href="${frontendUrl}" style="color:${COLORS.green700};text-decoration:underline;font-weight:500;">Zapisz się do newslettera na stronie głównej</a>
+    </p>
+  </td>
+</tr>
+`,
+    'Potwierdzenie wypisania z newslettera Schroniska',
+    frontendUrl,
+  );
+
+export const unsubscribeConfirmationText = (frontendUrl: string) =>
+  `Przykro nam, że wypisałeś się z newslettera Schroniska.\n\nPotwierdzamy, że nie będziesz już otrzymywać informacji o zwierzętach szukających domu.\n\nDziękujemy za dotychczasowe wsparcie!\n\nZapisz się ponownie: ${frontendUrl}`;
+
+export const newAnimalText = (params: {
+  animalName: string;
+  typeLabel: string;
+  genderLabel: string;
+  description: string;
+  animalsUrl: string;
+  unsubscribeUrl: string;
+}) =>
+  `${params.animalName} szuka domu!\n\nTyp: ${params.typeLabel}\nPłeć: ${params.genderLabel}\n\n${params.description}\n\nZobacz więcej: ${params.animalsUrl}\n\nWypisz się: ${params.unsubscribeUrl}`;

@@ -1,8 +1,8 @@
 import { Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import nodemailer from 'nodemailer';
 import { contactSchema } from '../validators/message.validator';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { createEmailTransporter } from '../services/emailService';
 
 export const sendContactMessage = async (req: AuthRequest, res: Response) => {
   const parsedBody = contactSchema.safeParse(req.body);
@@ -23,13 +23,7 @@ export const sendContactMessage = async (req: AuthRequest, res: Response) => {
 
   const { fullName, email, message } = parsedBody.data;
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-  });
+  const transporter = createEmailTransporter();
 
   try {
     await transporter.sendMail({

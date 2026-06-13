@@ -2,6 +2,8 @@ import { StatusCodes } from 'http-status-codes';
 import prisma from '../prisma';
 import { type Request, type Response } from 'express';
 import { animalSchema } from '../validators/animal.validator';
+import { triggerNewAnimalNotification } from '../services/emailService';
+import { AnimalStatus } from '../generated/prisma/enums';
 
 // 1. Pobierz wszystkie zwierzęta
 export const getAnimals = async (_req: Request, res: Response) => {
@@ -110,6 +112,13 @@ export const updateUniqueAnimal = async (req: Request, res: Response) => {
       data: parsedBody.data,
     });
 
+    if (
+      existing.status !== AnimalStatus.SZUKA_DOMU &&
+      updatedAnimal.status === AnimalStatus.SZUKA_DOMU
+    ) {
+      triggerNewAnimalNotification(updatedAnimal);
+    }
+
     return res.status(StatusCodes.OK).json(updatedAnimal);
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -166,6 +175,8 @@ export const createAnimal = async (req: Request, res: Response) => {
     const newAnimal = await prisma.animal.create({
       data: parsedBody.data,
     });
+
+    triggerNewAnimalNotification(newAnimal);
 
     return res.status(StatusCodes.CREATED).json(newAnimal);
   } catch (err) {

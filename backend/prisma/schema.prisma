@@ -169,3 +169,12 @@ model MedicalRecord {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt // Data aktualizacji
 }
+
+model NewsletterSubscriber {
+  id               Int      @id @default(autoincrement())
+  email            String   @unique
+  isActive         Boolean  @default(true)
+  unsubscribeToken String   @unique
+  consentAt        DateTime @default(now())
+  createdAt        DateTime @default(now())
+}
